@@ -1,58 +1,65 @@
-/**
- * Batalha Naval — Lógica Principal do Jogo
- * ==========================================
- * Referência base de estrutura:
- *   "Battleship Game in JavaScript" — The Odin Project (open source, MIT)
- *   https://www.theodinproject.com/lessons/node-path-javascript-battleship
- *
- * Modificações e adições feitas neste projeto:
- *  - Interface visual completa em HTML/CSS sem canvas
- *  - Modo 1 vs Bot com IA probabilística (hunt/target)
- *  - Modo 1 vs 1 local com overlay de troca de turno
- *  - Sistema de pré-visualização de posicionamento (hover)
- *  - Feedback visual animado (acerto, erro, afundado)
- *  - Log de batalha em tempo real
- *  - Posicionamento aleatório de navios
- */
-
 'use strict';
 
 const BOARD_SIZE = 10;
+const COLS = 'ABCDEFGHIJ';
 
 const SHIP_TYPES = [
-    { id: 'carrier', name: 'Porta-aviões', size: 5 },
-    { id: 'battleship', name: 'Encouraçado', size: 4 },
-    { id: 'cruiser', name: 'Cruzador', size: 3 },
-    { id: 'submarine', name: 'Submarino', size: 3 },
-    { id: 'destroyer', name: 'Destruidor', size: 2 },
+    { id: 'carrier', name: 'PORTA-AVIOES', size: 5 },
+    { id: 'battleship', name: 'ENCOURACADO', size: 4 },
+    { id: 'cruiser', name: 'CRUZADOR', size: 3 },
+    { id: 'submarine', name: 'SUBMARINO', size: 3 },
+    { id: 'destroyer', name: 'DESTRUIDOR', size: 2 },
 ];
 
 const CELL = { EMPTY: 0, SHIP: 1, HIT: 2, MISS: 3, SUNK: 4 };
 
+const DIFF = {
+    easy: {
+        label: 'FACIL', cls: 'diff-easy',
+        huntCheckerboard: false,
+        targetSmartDir: false,
+        accuracy: 0.5,
+    },
+    medium: {
+        label: 'MEDIO', cls: 'diff-medium',
+        huntCheckerboard: true,
+        targetSmartDir: false,
+        accuracy: 0.75,
+    },
+    hard: {
+        label: 'DIFICIL', cls: 'diff-hard',
+        huntCheckerboard: true,
+        targetSmartDir: true,
+        accuracy: 0.95,
+    },
+    impossible: {
+        label: 'IMPOSSIVEL', cls: 'diff-impossible',
+        huntCheckerboard: true,
+        targetSmartDir: true,
+        accuracy: 1.0,
+        probability: true,
+    },
+};
+
 let state = {
     mode: 'pve',
+    difficulty: 'medium',
     phase: 'menu',
     currentPlacer: 1,
     currentTurn: 1,
-
     placementDirection: 'h',
     selectedShipIdx: null,
-
-    boards: {
-        1: createEmptyBoard(),
-        2: createEmptyBoard(),
-    },
-
+    boards: { 1: createEmptyBoard(), 2: createEmptyBoard() },
     ships: { 1: [], 2: [] },
-
     remaining: { 1: [...SHIP_TYPES], 2: [...SHIP_TYPES] },
-
     stats: { shots: 0, hits: 0, start: null },
-
     ai: {
         mode: 'hunt',
         lastHit: null,
         targetQueue: [],
+        dirQueue: [],
+        hitDir: null,
+        firstHit: null,
         attacked: new Set(),
     },
 };
@@ -61,14 +68,9 @@ function createEmptyBoard() {
     return Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(CELL.EMPTY));
 }
 
-function cloneBoard(board) {
-    return board.map(row => [...row]);
-}
-
 function canPlace(board, row, col, size, dir) {
     const positions = getPositions(row, col, size, dir);
     if (!positions) return false;
-
     for (const [r, c] of positions) {
         for (let dr = -1; dr <= 1; dr++) {
             for (let dc = -1; dc <= 1; dc++) {
@@ -95,13 +97,12 @@ function getPositions(row, col, size, dir) {
 function placeShip(board, row, col, size, dir, shipInfo) {
     const positions = getPositions(row, col, size, dir);
     for (const [r, c] of positions) board[r][c] = CELL.SHIP;
-    return { ...shipInfo, positions, hits: 0, sunk: false };
+    return { ...shipInfo, positions, hits: 0, sunk: false, dir };
 }
 
 function attack(targetBoard, targetShips, row, col) {
     if (targetBoard[row][col] === CELL.SHIP) {
         targetBoard[row][col] = CELL.HIT;
-
         for (const ship of targetShips) {
             if (ship.sunk) continue;
             if (ship.positions.some(([r, c]) => r === row && c === col)) {
@@ -115,7 +116,6 @@ function attack(targetBoard, targetShips, row, col) {
         }
         return 'hit';
     }
-
     if (targetBoard[row][col] === CELL.EMPTY) {
         targetBoard[row][col] = CELL.MISS;
         return 'miss';
@@ -123,18 +123,14 @@ function attack(targetBoard, targetShips, row, col) {
     return null;
 }
 
-function allShipsSunk(ships) {
-    return ships.every(s => s.sunk);
-}
+function allShipsSunk(ships) { return ships.every(s => s.sunk); }
 
 function randomPlacementForPlayer(playerNum) {
     const board = createEmptyBoard();
     const ships = [];
-
     for (const shipType of SHIP_TYPES) {
-        let placed = false;
-        let attempts = 0;
-        while (!placed && attempts < 1000) {
+        let placed = false, attempts = 0;
+        while (!placed && attempts < 2000) {
             attempts++;
             const row = Math.floor(Math.random() * BOARD_SIZE);
             const col = Math.floor(Math.random() * BOARD_SIZE);
@@ -145,126 +141,199 @@ function randomPlacementForPlayer(playerNum) {
             }
         }
     }
-
     return { board, ships };
 }
 
-/**
- * A IA usa estratégia hunt/target:
- *  - Modo 'hunt': ataca células em padrão de tabuleiro (checkerboard) aleatoriamente.
- *  - Modo 'target': após um hit, tenta as células vizinhas para afundar o navio.
- */
+// ===== AI =====
+function buildProbabilityMap() {
+    const prob = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(0));
+    const remainingSizes = state.ships[1].filter(s => !s.sunk).map(s => s.size);
+
+    for (const size of remainingSizes) {
+        for (let r = 0; r < BOARD_SIZE; r++) {
+            for (let c = 0; c < BOARD_SIZE; c++) {
+                // horizontal
+                const ph = getPositions(r, c, size, 'h');
+                if (ph && ph.every(([pr, pc]) => {
+                    const v = state.boards[1][pr][pc];
+                    return v === CELL.EMPTY || v === CELL.SHIP;
+                })) {
+                    for (const [pr, pc] of ph) prob[pr][pc]++;
+                }
+                // vertical
+                const pv = getPositions(r, c, size, 'v');
+                if (pv && pv.every(([pr, pc]) => {
+                    const v = state.boards[1][pr][pc];
+                    return v === CELL.EMPTY || v === CELL.SHIP;
+                })) {
+                    for (const [pr, pc] of pv) prob[pr][pc]++;
+                }
+            }
+        }
+    }
+    return prob;
+}
+
 function aiBestMove() {
     const ai = state.ai;
-    const board = state.boards[1];
+    const diff = DIFF[state.difficulty];
 
     while (ai.targetQueue.length > 0) {
         const [r, c] = ai.targetQueue.shift();
-        if (!ai.attacked.has(`${r},${c}`) && isValidCell(r, c)) {
+        if (!ai.attacked.has(`${r},${c}`) && isValid(r, c)) {
             return [r, c];
         }
     }
 
-    const candidates = [];
-    for (let r = 0; r < BOARD_SIZE; r++) {
-        for (let c = 0; c < BOARD_SIZE; c++) {
-            if (!ai.attacked.has(`${r},${c}`) && (r + c) % 2 === 0) {
-                candidates.push([r, c]);
-            }
-        }
+    if (Math.random() > diff.accuracy) {
+        const all = [];
+        for (let r = 0; r < BOARD_SIZE; r++)
+            for (let c = 0; c < BOARD_SIZE; c++)
+                if (!ai.attacked.has(`${r},${c}`)) all.push([r, c]);
+        if (all.length) return all[Math.floor(Math.random() * all.length)];
     }
 
-    if (candidates.length === 0) {
+    if (diff.probability) {
+        const prob = buildProbabilityMap();
+        for (let r = 0; r < BOARD_SIZE; r++)
+            for (let c = 0; c < BOARD_SIZE; c++)
+                if (state.boards[1][r][c] === CELL.HIT) prob[r][c] += 100;
+
+        let best = -1, bestCells = [];
         for (let r = 0; r < BOARD_SIZE; r++) {
             for (let c = 0; c < BOARD_SIZE; c++) {
-                if (!ai.attacked.has(`${r},${c}`)) candidates.push([r, c]);
+                if (!ai.attacked.has(`${r},${c}`)) {
+                    if (prob[r][c] > best) { best = prob[r][c]; bestCells = [[r, c]]; }
+                    else if (prob[r][c] === best) bestCells.push([r, c]);
+                }
             }
         }
+        if (bestCells.length) return bestCells[Math.floor(Math.random() * bestCells.length)];
     }
 
-    return candidates[Math.floor(Math.random() * candidates.length)];
+    if (diff.huntCheckerboard) {
+        const candidates = [];
+        for (let r = 0; r < BOARD_SIZE; r++)
+            for (let c = 0; c < BOARD_SIZE; c++)
+                if (!ai.attacked.has(`${r},${c}`) && (r + c) % 2 === 0) candidates.push([r, c]);
+        if (candidates.length) return candidates[Math.floor(Math.random() * candidates.length)];
+    }
+
+    const all = [];
+    for (let r = 0; r < BOARD_SIZE; r++)
+        for (let c = 0; c < BOARD_SIZE; c++)
+            if (!ai.attacked.has(`${r},${c}`)) all.push([r, c]);
+    return all[Math.floor(Math.random() * all.length)];
 }
 
-function isValidCell(r, c) {
-    return r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE;
-}
+function isValid(r, c) { return r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE; }
 
 function aiAddTargets(row, col) {
-    const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-    for (const [dr, dc] of dirs) {
-        const r = row + dr, c = col + dc;
-        if (isValidCell(r, c) && !state.ai.attacked.has(`${r},${c}`)) {
-            state.ai.targetQueue.push([r, c]);
+    const ai = state.ai;
+    const diff = DIFF[state.difficulty];
+
+    if (diff.targetSmartDir && ai.firstHit && ai.hitDir) {
+        const [dr, dc] = ai.hitDir;
+        const nr1 = row + dr, nc1 = col + dc;
+        const nr2 = ai.firstHit[0] - dr, nc2 = ai.firstHit[1] - dc;
+        if (isValid(nr1, nc1) && !ai.attacked.has(`${nr1},${nc1}`)) ai.targetQueue.unshift([nr1, nc1]);
+        if (isValid(nr2, nc2) && !ai.attacked.has(`${nr2},${nc2}`)) ai.targetQueue.push([nr2, nc2]);
+    } else {
+        const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+        for (const [dr, dc] of dirs) {
+            const r = row + dr, c = col + dc;
+            if (isValid(r, c) && !ai.attacked.has(`${r},${c}`)) ai.targetQueue.push([r, c]);
+        }
+        if (diff.targetSmartDir && ai.firstHit) {
+            const dr = row - ai.firstHit[0], dc = col - ai.firstHit[1];
+            if (dr !== 0 || dc !== 0) {
+                const normDr = Math.sign(dr), normDc = Math.sign(dc);
+                ai.hitDir = [normDr, normDc];
+                const next = [row + normDr, col + normDc];
+                const back = [ai.firstHit[0] - normDr, ai.firstHit[1] - normDc];
+                ai.targetQueue = [];
+                if (isValid(...next) && !ai.attacked.has(`${next[0]},${next[1]}`)) ai.targetQueue.push(next);
+                if (isValid(...back) && !ai.attacked.has(`${back[0]},${back[1]}`)) ai.targetQueue.push(back);
+            }
         }
     }
 }
 
 function aiDoTurn() {
+    if (state.phase !== 'game' || state.currentTurn !== 2) return;
+
     const [row, col] = aiBestMove();
     state.ai.attacked.add(`${row},${col}`);
 
     const result = attack(state.boards[1], state.ships[1], row, col);
-    if (!result) return;
+    if (!result) { endBotTurn('miss'); return; }
 
     state.stats.shots++;
-    if (result === 'hit' || result === 'sunk') state.stats.hits++;
+    if (result !== 'miss') state.stats.hits++;
 
-    const label = `[${String.fromCharCode(65 + col)}${row + 1}]`;
+    const label = `[${COLS[col]}${row + 1}]`;
 
     if (result === 'sunk') {
-        const sunkShip = state.ships[1].find(s => s.sunk && s.positions.some(([r, c]) => r === row && c === col));
-        addLog(`🤖 Bot afundou: ${sunkShip ? sunkShip.name : 'navio'}!`, 'sunk');
+        const sunk = state.ships[1].find(s => s.sunk && s.positions.some(([r, c]) => r === row && c === col));
+        addLog(`BOT AFUNDOU: ${sunk ? sunk.name : 'NAVIO'}!`, 'sunk');
         state.ai.targetQueue = [];
         state.ai.mode = 'hunt';
+        state.ai.hitDir = null;
+        state.ai.firstHit = null;
     } else if (result === 'hit') {
-        addLog(`🤖 Bot acertou ${label}!`, 'hit');
+        addLog(`BOT ACERTOU ${label}`, 'bot');
+        if (!state.ai.firstHit) state.ai.firstHit = [row, col];
         aiAddTargets(row, col);
         state.ai.mode = 'target';
     } else {
-        addLog(`🤖 Bot errou ${label}.`, 'miss');
+        addLog(`BOT ERROU ${label}`, 'miss');
     }
 
     renderGameBoards();
     updateShipCounts();
 
-    if (allShipsSunk(state.ships[1])) {
-        endGame(2);
-        return;
-    }
+    if (allShipsSunk(state.ships[1])) { endGame(2); return; }
 
+    endBotTurn(result);
+}
+
+function endBotTurn(result) {
+    setThinking(false);
     if (result === 'miss') {
-        setTimeout(() => {
-            state.currentTurn = 1;
-            updateTurnUI();
-        }, 600);
+        state.currentTurn = 1;
+        updateTurnUI();
+        renderGameBoards();
     } else {
+        updateTurnUI();
+        setThinking(true);
         setTimeout(() => {
-            renderGameBoards();
-            updateTurnUI();
-            aiDoTurn();
-        }, 600);
+            if (state.phase === 'game' && state.currentTurn === 2) aiDoTurn();
+        }, 700);
     }
+}
+
+function setThinking(active) {
+    const bar = document.getElementById('thinking-bar');
+    if (bar) bar.classList.toggle('active', active);
 }
 
 function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(`screen-${id}`).classList.add('active');
     state.phase = id;
+    const exitBtn = document.getElementById('btn-exit');
+    if (exitBtn) exitBtn.style.display = (id === 'menu') ? 'none' : 'block';
+    const exitOverlay = document.getElementById('exit-overlay');
+    if (exitOverlay) exitOverlay.style.display = 'none';
 }
 
-function backToMenu() {
-    resetState();
-    showScreen('menu');
-}
-
-function playAgain() {
-    resetState();
-    showScreen('menu');
-}
+function backToMenu() { resetState(); showScreen('menu'); }
+function playAgain() { resetState(); showScreen('menu'); }
 
 function resetState() {
+    const { mode, difficulty } = state;
     state = {
-        mode: state.mode,
+        mode, difficulty,
         phase: 'menu',
         currentPlacer: 1,
         currentTurn: 1,
@@ -274,28 +343,56 @@ function resetState() {
         ships: { 1: [], 2: [] },
         remaining: { 1: [...SHIP_TYPES], 2: [...SHIP_TYPES] },
         stats: { shots: 0, hits: 0, start: null },
-        ai: { mode: 'hunt', lastHit: null, targetQueue: [], attacked: new Set() },
+        ai: { mode: 'hunt', lastHit: null, targetQueue: [], dirQueue: [], hitDir: null, firstHit: null, attacked: new Set() },
     };
 }
 
-function startGame(mode) {
+function selectMode(mode) {
     state.mode = mode;
+    const diffSection = document.getElementById('diff-section');
+    if (mode === 'pve') {
+        diffSection.style.display = 'block';
+    } else {
+        diffSection.style.display = 'none';
+        startGame('pvp', null);
+    }
+}
+
+function startGame(mode, diff) {
+    state.mode = mode;
+    if (diff) state.difficulty = diff;
     state.currentPlacer = 1;
     showScreen('placement');
+    buildBoardLabels('placement-col-labels', 'placement-row-labels');
     renderPlacementScreen(1);
+}
+
+function buildBoardLabels(colId, rowId) {
+    const colEl = document.getElementById(colId);
+    const rowEl = document.getElementById(rowId);
+    if (colEl) {
+        colEl.innerHTML = '';
+        for (let c = 0; c < BOARD_SIZE; c++) {
+            const s = document.createElement('span');
+            s.textContent = COLS[c];
+            colEl.appendChild(s);
+        }
+    }
+    if (rowEl) {
+        rowEl.innerHTML = '';
+        for (let r = 0; r < BOARD_SIZE; r++) {
+            const s = document.createElement('span');
+            s.textContent = r + 1;
+            rowEl.appendChild(s);
+        }
+    }
 }
 
 function renderPlacementScreen(playerNum) {
     const titleEl = document.getElementById('placement-title');
-    const subtitleEl = document.getElementById('placement-subtitle');
-
-    if (state.mode === 'pvp') {
-        titleEl.textContent = `Jogador ${playerNum}: Posicione seus navios`;
-    } else {
-        titleEl.textContent = 'Posicione seus navios';
-    }
-    subtitleEl.innerHTML = `Clique para posicionar | <kbd>R</kbd> para rotacionar`;
-
+    titleEl.textContent = state.mode === 'pvp'
+        ? `JOGADOR ${playerNum}: POSICIONE OS NAVIOS`
+        : 'POSICIONE SEUS NAVIOS';
     renderShipList(playerNum);
     renderPlacementBoard(playerNum);
     updateReadyButton(playerNum);
@@ -304,15 +401,13 @@ function renderPlacementScreen(playerNum) {
 function renderShipList(playerNum) {
     const container = document.getElementById('ship-list');
     container.innerHTML = '';
-
     SHIP_TYPES.forEach((ship, idx) => {
         const placed = !state.remaining[playerNum].some(r => r.id === ship.id);
         const isSelected = state.selectedShipIdx === idx;
-
         const div = document.createElement('div');
         div.className = `ship-item ${placed ? 'placed' : ''} ${isSelected ? 'selected' : ''}`;
         div.innerHTML = `
-      <span class="ship-name">${ship.name} (${ship.size})</span>
+      <span style="font-size:7px;">${ship.name} (${ship.size})</span>
       <span class="ship-cells">${'<span></span>'.repeat(ship.size)}</span>
     `;
         if (!placed) div.addEventListener('click', () => selectShip(idx, playerNum));
@@ -351,24 +446,31 @@ function randomPlacement() {
 function renderPlacementBoard(playerNum) {
     const container = document.getElementById('placement-board');
     container.innerHTML = '';
-
     for (let r = 0; r < BOARD_SIZE; r++) {
         for (let c = 0; c < BOARD_SIZE; c++) {
             const cell = document.createElement('div');
             cell.className = 'cell';
-            if (state.boards[playerNum][r][c] === CELL.SHIP) {
+            const val = state.boards[playerNum][r][c];
+            if (val === CELL.SHIP) {
                 cell.classList.add('ship-placed');
-                if (state.ships[playerNum].findIndex(s => s.positions.some(([sr, sc]) => sr === r && sc === c && !s._allPlaced)) !== -1) {
-                }
+                markShipEnds(cell, r, c, playerNum, 'placement-board');
             }
-
             cell.addEventListener('click', () => handlePlacementClick(r, c, playerNum));
             cell.addEventListener('mouseenter', () => showPlacementPreview(r, c, playerNum));
-            cell.addEventListener('mouseleave', () => clearPlacementPreview(playerNum));
-
+            cell.addEventListener('mouseleave', () => clearPlacementPreview());
             container.appendChild(cell);
         }
     }
+}
+
+function markShipEnds(cell, r, c, playerNum, boardId) {
+    const ship = state.ships[playerNum].find(s => s.positions.some(([sr, sc]) => sr === r && sc === c));
+    if (!ship) return;
+    const positions = ship.positions;
+    const isHead = positions[0][0] === r && positions[0][1] === c;
+    const isTail = positions[positions.length - 1][0] === r && positions[positions.length - 1][1] === c;
+    if (isHead) cell.classList.add('ship-head');
+    if (isTail) cell.classList.add('ship-tail');
 }
 
 function getCellEl(boardId, row, col) {
@@ -377,15 +479,12 @@ function getCellEl(boardId, row, col) {
 }
 
 function showPlacementPreview(row, col, playerNum) {
-    clearPlacementPreview(playerNum);
+    clearPlacementPreview();
     if (state.selectedShipIdx === null) return;
-
     const ship = SHIP_TYPES[state.selectedShipIdx];
     if (!state.remaining[playerNum].some(r => r.id === ship.id)) return;
-
     const positions = getPositions(row, col, ship.size, state.placementDirection);
     const valid = canPlace(state.boards[playerNum], row, col, ship.size, state.placementDirection);
-
     if (positions) {
         for (const [r, c] of positions) {
             const cell = getCellEl('placement-board', r, c);
@@ -394,7 +493,7 @@ function showPlacementPreview(row, col, playerNum) {
     }
 }
 
-function clearPlacementPreview(playerNum) {
+function clearPlacementPreview() {
     document.querySelectorAll('#placement-board .cell').forEach(cell => {
         cell.classList.remove('ship-preview', 'invalid');
     });
@@ -404,24 +503,17 @@ function handlePlacementClick(row, col, playerNum) {
     if (state.selectedShipIdx === null) return;
     const ship = SHIP_TYPES[state.selectedShipIdx];
     if (!state.remaining[playerNum].some(r => r.id === ship.id)) return;
-
     if (!canPlace(state.boards[playerNum], row, col, ship.size, state.placementDirection)) return;
-
-    const placed = placeShip(state.boards[playerNum], row, col, ship.size, state.placementDirection, {
-        id: ship.id, name: ship.name, size: ship.size
-    });
+    const placed = placeShip(state.boards[playerNum], row, col, ship.size, state.placementDirection, { id: ship.id, name: ship.name, size: ship.size });
     state.ships[playerNum].push(placed);
     state.remaining[playerNum] = state.remaining[playerNum].filter(r => r.id !== ship.id);
-
     const next = state.remaining[playerNum][0];
     state.selectedShipIdx = next ? SHIP_TYPES.findIndex(s => s.id === next.id) : null;
-
     renderPlacementScreen(playerNum);
 }
 
 function updateReadyButton(playerNum) {
-    const btn = document.getElementById('btn-ready');
-    btn.disabled = state.remaining[playerNum].length > 0;
+    document.getElementById('btn-ready').disabled = state.remaining[playerNum].length > 0;
 }
 
 function playerReady() {
@@ -433,7 +525,7 @@ function playerReady() {
     } else {
         if (state.currentPlacer === 1) {
             state.currentPlacer = 2;
-            showPvpOverlay('Passe o dispositivo', 'para o Jogador 2 posicionar seus navios', () => {
+            showPvpOverlay('PASSE O DISPOSITIVO', 'para o Jogador 2 posicionar seus navios', () => {
                 renderPlacementScreen(2);
             });
         } else {
@@ -447,26 +539,35 @@ function startGamePhase() {
     state.currentTurn = 1;
     state.stats.start = Date.now();
     showScreen('game');
+    buildBoardLabels('game-col-labels-1', 'game-row-labels-1');
+    buildBoardLabels('game-col-labels-2', 'game-row-labels-2');
     renderGameScreen();
 }
 
 function renderGameScreen() {
-    document.getElementById('p1-name').textContent = 'Jogador 1';
-    document.getElementById('p2-name').textContent = state.mode === 'pve' ? 'Bot' : 'Jogador 2';
+    document.getElementById('p1-name').textContent = 'JOGADOR 1';
+    document.getElementById('p2-name').textContent = state.mode === 'pve' ? 'BOT' : 'JOGADOR 2';
+
+    // Show difficulty badge
+    const badge = document.getElementById('turn-badge');
+    if (state.mode === 'pve') {
+        const d = DIFF[state.difficulty];
+        badge.title = d.label;
+    }
 
     updateShipCounts();
     updateTurnUI();
     renderGameBoards();
-    renderGameLog();
 }
 
 function renderGameBoards() {
-    renderBoardDisplay('player-board', state.boards[1], false);
-    renderBoardDisplay('enemy-board', state.boards[2], true);
+    renderBoardDisplay('player-board', state.boards[1], state.ships[1], false, 1);
+    renderBoardDisplay('enemy-board', state.boards[2], state.ships[2], true, 2);
 }
 
-function renderBoardDisplay(boardId, board, isAttack) {
+function renderBoardDisplay(boardId, board, ships, isAttack, playerNum) {
     const container = document.getElementById(boardId);
+    if (!container) return;
     container.innerHTML = '';
 
     for (let r = 0; r < BOARD_SIZE; r++) {
@@ -475,7 +576,14 @@ function renderBoardDisplay(boardId, board, isAttack) {
             cell.className = 'cell';
             const val = board[r][c];
 
-            if (val === CELL.SHIP && !isAttack) cell.classList.add('ship-placed');
+            if (val === CELL.SHIP && !isAttack) {
+                cell.classList.add('ship-placed');
+                const ship = ships.find(s => s.positions.some(([sr, sc]) => sr === r && sc === c));
+                if (ship) {
+                    if (ship.positions[0][0] === r && ship.positions[0][1] === c) cell.classList.add('ship-head');
+                    if (ship.positions[ship.positions.length - 1][0] === r && ship.positions[ship.positions.length - 1][1] === c) cell.classList.add('ship-tail');
+                }
+            }
             if (val === CELL.HIT) cell.classList.add('hit');
             if (val === CELL.MISS) cell.classList.add('miss');
             if (val === CELL.SUNK) cell.classList.add('sunk');
@@ -505,31 +613,33 @@ function handleAttack(row, col) {
     if (!result) return;
 
     state.stats.shots++;
-    if (result === 'hit' || result === 'sunk') state.stats.hits++;
+    if (result !== 'miss') state.stats.hits++;
 
-    const label = `[${String.fromCharCode(65 + col)}${row + 1}]`;
+    const label = `[${COLS[col]}${row + 1}]`;
 
     if (result === 'sunk') {
-        const sunkShip = state.ships[2].find(s => s.sunk && s.positions.some(([r, c]) => r === row && c === col));
-        addLog(`💥 Você afundou: ${sunkShip ? sunkShip.name : 'navio'}!`, 'sunk');
+        const sunk = state.ships[2].find(s => s.sunk && s.positions.some(([r, c]) => r === row && c === col));
+        addLog(`VOCE AFUNDOU: ${sunk ? sunk.name : 'NAVIO'}!`, 'sunk');
     } else if (result === 'hit') {
-        addLog(`🎯 Você acertou ${label}!`, 'hit');
+        addLog(`ACERTO ${label}`, 'hit');
     } else {
-        addLog(`💧 Você errou ${label}.`, 'miss');
+        addLog(`ERRO ${label}`, 'miss');
     }
 
     renderGameBoards();
     updateShipCounts();
 
-    if (allShipsSunk(state.ships[2])) {
-        endGame(1);
-        return;
-    }
+    if (allShipsSunk(state.ships[2])) { endGame(1); return; }
+
     if (state.mode === 'pve') {
         if (result === 'miss') {
+            // Player missed -> bot's turn
             state.currentTurn = 2;
             updateTurnUI();
-            setTimeout(() => aiDoTurn(), 800);
+            setThinking(true);
+            setTimeout(() => {
+                if (state.phase === 'game' && state.currentTurn === 2) aiDoTurn();
+            }, 900);
         } else {
             updateTurnUI();
         }
@@ -537,7 +647,7 @@ function handleAttack(row, col) {
         if (result === 'miss') {
             state.currentTurn = 2;
             updateTurnUI();
-            showPvpOverlay('Passe o dispositivo', 'para o Jogador 2 atacar', () => {
+            showPvpOverlay('PASSE O DISPOSITIVO', 'para o Jogador 2 atacar', () => {
                 renderPvpEnemyBoard();
             });
         } else {
@@ -547,7 +657,7 @@ function handleAttack(row, col) {
 }
 
 function renderPvpEnemyBoard() {
-    renderBoardDisplay('player-board', state.boards[2], false);
+    renderBoardDisplay('player-board', state.boards[2], state.ships[2], false, 2);
     const container = document.getElementById('enemy-board');
     container.innerHTML = '';
 
@@ -556,24 +666,20 @@ function renderPvpEnemyBoard() {
             const cell = document.createElement('div');
             cell.className = 'cell';
             const val = state.boards[1][r][c];
-
             if (val === CELL.HIT) cell.classList.add('hit');
             if (val === CELL.MISS) cell.classList.add('miss');
             if (val === CELL.SUNK) cell.classList.add('sunk');
-
             const attackable = (val === CELL.EMPTY || val === CELL.SHIP) && state.currentTurn === 2;
             if (attackable) {
                 cell.addEventListener('click', () => handlePvpAttack(r, c));
             } else {
                 cell.classList.add('no-attack');
             }
-
             container.appendChild(cell);
         }
     }
-
-    document.getElementById('p1-name').textContent = 'Jogador 2';
-    document.getElementById('p2-name').textContent = 'Jogador 1';
+    document.getElementById('p1-name').textContent = 'JOGADOR 2';
+    document.getElementById('p2-name').textContent = 'JOGADOR 1';
 }
 
 function handlePvpAttack(row, col) {
@@ -585,31 +691,31 @@ function handlePvpAttack(row, col) {
     if (!result) return;
 
     state.stats.shots++;
-    if (result === 'hit' || result === 'sunk') state.stats.hits++;
+    if (result !== 'miss') state.stats.hits++;
 
-    const label = `[${String.fromCharCode(65 + col)}${row + 1}]`;
+    const label = `[${COLS[col]}${row + 1}]`;
 
     if (result === 'sunk') {
-        const sunkShip = state.ships[1].find(s => s.sunk && s.positions.some(([r, c]) => r === row && c === col));
-        addLog(`💥 J2 afundou: ${sunkShip ? sunkShip.name : 'navio'}!`, 'sunk');
+        const sunk = state.ships[1].find(s => s.sunk && s.positions.some(([r, c]) => r === row && c === col));
+        addLog(`J2 AFUNDOU: ${sunk ? sunk.name : 'NAVIO'}!`, 'sunk');
     } else if (result === 'hit') {
-        addLog(`🎯 Jogador 2 acertou ${label}!`, 'hit');
+        addLog(`J2 ACERTOU ${label}`, 'hit');
     } else {
-        addLog(`💧 Jogador 2 errou ${label}.`, 'miss');
+        addLog(`J2 ERROU ${label}`, 'miss');
     }
 
-    renderBoardDisplay('enemy-board', state.boards[1], false);
-    renderBoardDisplay('player-board', state.boards[2], false);
+    renderBoardDisplay('enemy-board', state.boards[1], state.ships[1], false, 1);
+    renderBoardDisplay('player-board', state.boards[2], state.ships[2], false, 2);
     updateShipCounts();
 
     if (allShipsSunk(state.ships[1])) { endGame(2); return; }
 
     if (result === 'miss') {
         state.currentTurn = 1;
-        showPvpOverlay('Passe o dispositivo', 'para o Jogador 1 atacar', () => {
+        showPvpOverlay('PASSE O DISPOSITIVO', 'para o Jogador 1 atacar', () => {
             renderGameBoards();
-            document.getElementById('p1-name').textContent = 'Jogador 1';
-            document.getElementById('p2-name').textContent = 'Jogador 2';
+            document.getElementById('p1-name').textContent = 'JOGADOR 1';
+            document.getElementById('p2-name').textContent = 'JOGADOR 2';
             updateTurnUI();
         });
     } else {
@@ -622,32 +728,23 @@ function updateTurnUI() {
     const badge = document.getElementById('turn-badge');
     if (state.mode === 'pve') {
         if (state.currentTurn === 1) {
-            badge.textContent = '⚔️ Seu turno';
-            badge.classList.remove('enemy-turn');
+            badge.textContent = '> SEU TURNO';
+            badge.className = 'turn-badge';
         } else {
-            badge.textContent = '🤖 Turno do Bot';
-            badge.classList.add('enemy-turn');
+            badge.textContent = '> BOT JOGANDO...';
+            badge.className = 'turn-badge bot-thinking';
         }
     } else {
-        if (state.currentTurn === 1) {
-            badge.textContent = '⚔️ Turno do Jogador 1';
-            badge.classList.remove('enemy-turn');
-        } else {
-            badge.textContent = '⚔️ Turno do Jogador 2';
-            badge.classList.add('enemy-turn');
-        }
+        badge.textContent = state.currentTurn === 1 ? '> TURNO J1' : '> TURNO J2';
+        badge.className = `turn-badge ${state.currentTurn === 2 ? 'enemy-turn' : ''}`;
     }
 }
 
 function updateShipCounts() {
     const s1 = state.ships[1].filter(s => !s.sunk).length;
     const s2 = state.ships[2].filter(s => !s.sunk).length;
-    document.getElementById('p1-ships').textContent = `Navios: ${s1}`;
-    document.getElementById('p2-ships').textContent = `Navios: ${s2}`;
-}
-
-function renderGameLog() {
-    document.getElementById('game-log').innerHTML = '';
+    document.getElementById('p1-ships').textContent = `NAVIOS: ${s1}`;
+    document.getElementById('p2-ships').textContent = `NAVIOS: ${s2}`;
 }
 
 function addLog(msg, type = 'info') {
@@ -669,50 +766,85 @@ function showPvpOverlay(title, msg, callback) {
 function hidePvpOverlay() {
     const overlay = document.getElementById('pvp-overlay');
     overlay.style.display = 'none';
-    if (overlay._callback) {
-        overlay._callback();
-        overlay._callback = null;
-    }
-}
-
-function passTurn() {
-    hidePvpOverlay();
+    if (overlay._callback) { overlay._callback(); overlay._callback = null; }
 }
 
 function endGame(winnerNum) {
     state.phase = 'victory';
+    setThinking(false);
     const elapsed = Math.round((Date.now() - state.stats.start) / 1000);
     const acc = state.stats.shots > 0 ? Math.round((state.stats.hits / state.stats.shots) * 100) : 0;
 
     const titleEl = document.getElementById('victory-title');
     const subtitleEl = document.getElementById('victory-subtitle');
+    const iconEl = document.getElementById('victory-icon');
     const statsEl = document.getElementById('victory-stats');
 
     if (state.mode === 'pve') {
         if (winnerNum === 1) {
-            titleEl.textContent = '🏆 Vitória!';
-            subtitleEl.textContent = 'Você derrotou o Bot!';
+            iconEl.textContent = '*** WIN ***';
+            iconEl.style.color = '#ffe600';
+            titleEl.textContent = 'VITORIA!';
+            subtitleEl.textContent = 'Voce derrotou o Bot!';
         } else {
-            titleEl.textContent = '💀 Derrota!';
-            subtitleEl.textContent = 'O Bot afundou todos os seus navios.';
+            iconEl.textContent = '--- KO ---';
+            iconEl.style.color = '#ff2020';
+            titleEl.textContent = 'DERROTA!';
+            subtitleEl.textContent = 'O Bot afundou tudo.';
         }
     } else {
-        titleEl.textContent = `🏆 Jogador ${winnerNum} venceu!`;
-        subtitleEl.textContent = 'Parabéns pela vitória!';
+        iconEl.textContent = '*** WIN ***';
+        iconEl.style.color = '#ffe600';
+        titleEl.textContent = `JOGADOR ${winnerNum} VENCEU!`;
+        subtitleEl.textContent = 'Parabens pela vitoria!';
     }
 
+    const diffLabel = state.mode === 'pve' ? ` | ${DIFF[state.difficulty].label}` : '';
     statsEl.innerHTML = `
-    <div>🎯 Tiros disparados: <strong>${state.stats.shots}</strong></div>
-    <div>💥 Acertos: <strong>${state.stats.hits}</strong></div>
-    <div>📊 Precisão: <strong>${acc}%</strong></div>
-    <div>⏱️ Tempo: <strong>${elapsed}s</strong></div>
+    <div>TIROS: <strong>${state.stats.shots}</strong></div>
+    <div>ACERTOS: <strong>${state.stats.hits}</strong></div>
+    <div>PRECISAO: <strong>${acc}%</strong></div>
+    <div>TEMPO: <strong>${elapsed}s</strong>${diffLabel}</div>
   `;
 
-    setTimeout(() => showScreen('victory'), 500);
+    setTimeout(() => showScreen('victory'), 600);
 }
 
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'r' || e.key === 'R') {
-        if (state.phase === 'placement') rotateShip();
+document.addEventListener('keydown', e => {
+    if ((e.key === 'r' || e.key === 'R') && state.phase === 'placement') rotateShip();
+});
+
+buildBoardLabels('placement-col-labels', 'placement-row-labels');
+
+function onExitClick() {
+    if (state.phase === 'game') {
+        showExitOverlay();
+    } else {
+        backToMenu();
+    }
+}
+
+function showExitOverlay() {
+    const overlay = document.getElementById('exit-overlay');
+    if (!overlay) return;
+    overlay.style.display = 'flex';
+}
+
+function hideExitOverlay() {
+    const overlay = document.getElementById('exit-overlay');
+    if (!overlay) return;
+    overlay.style.display = 'none';
+}
+
+function confirmExit() {
+    hideExitOverlay();
+    backToMenu();
+}
+
+window.addEventListener('beforeunload', (e) => {
+    if (state.phase === 'game') {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
     }
 });
