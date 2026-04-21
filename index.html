@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Batalha Naval</title>
+    <link rel="stylesheet" href="./styles/style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- TELA DE MENU -->
+    <div id="screen-menu" class="screen active">
+        <div class="menu-container">
+            <h1 class="game-title">⚓ Batalha Naval</h1>
+            <p class="subtitle">Escolha o modo de jogo</p>
+            <div class="menu-buttons">
+                <button class="btn btn-primary" onclick="startGame('pve')">
+                    🤖 1 vs Bot
+                </button>
+                <button class="btn btn-secondary" onclick="startGame('pvp')">
+                    👥 1 vs 1
+                </button>
+            </div>
+            <div class="rules-box">
+                <h3>Como jogar</h3>
+                <ul>
+                    <li>Posicione seus navios no tabuleiro (clique ou arraste)</li>
+                    <li>Clique em "R" para rotacionar o navio selecionado</li>
+                    <li>Ataque o tabuleiro inimigo clicando nas células</li>
+                    <li>Afunde todos os navios do adversário para vencer</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA DE POSICIONAMENTO -->
+    <div id="screen-placement" class="screen">
+        <div class="placement-container">
+            <h2 id="placement-title">Posicione seus navios</h2>
+            <p id="placement-subtitle" class="subtitle">
+                Clique no tabuleiro para posicionar | <kbd>R</kbd> para rotacionar
+            </p>
+
+            <div class="placement-layout">
+                <!-- Painel de navios -->
+                <div class="ship-panel">
+                    <h3>Seus Navios</h3>
+                    <div id="ship-list"></div>
+                    <div class="ship-controls">
+                        <button class="btn btn-sm" onclick="rotateShip()">
+                            🔄 Rotacionar (R)
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="clearBoard()">
+                            🗑️ Limpar
+                        </button>
+                        <button class="btn btn-sm" onclick="randomPlacement()">
+                            🎲 Aleatório
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabuleiro de posicionamento -->
+                <div class="board-wrapper">
+                    <div id="placement-board" class="board"></div>
+                </div>
+            </div>
+
+            <button id="btn-ready" class="btn btn-primary btn-lg" onclick="playerReady()" disabled>
+                ✅ Pronto!
+            </button>
+        </div>
+    </div>
+
+    <!-- TELA DE JOGO -->
+    <div id="screen-game" class="screen">
+        <div class="game-header">
+            <div class="player-info" id="p1-info">
+                <span class="player-name" id="p1-name">Jogador 1</span>
+                <span class="ship-count" id="p1-ships">Navios: 5</span>
+            </div>
+            <div class="turn-indicator">
+                <div id="turn-badge" class="turn-badge">Seu turno</div>
+            </div>
+            <div class="player-info" id="p2-info">
+                <span class="player-name" id="p2-name">Inimigo</span>
+                <span class="ship-count" id="p2-ships">Navios: 5</span>
+            </div>
+        </div>
+
+        <div class="game-layout">
+            <!-- Tabuleiro do jogador -->
+            <div class="board-section">
+                <h3 class="board-label">Seu Tabuleiro</h3>
+                <div id="player-board" class="board board-display"></div>
+            </div>
+
+            <!-- Log de ações -->
+            <div class="game-log-section">
+                <h3>Log de Batalha</h3>
+                <div id="game-log" class="game-log"></div>
+            </div>
+
+            <!-- Tabuleiro inimigo -->
+            <div class="board-section">
+                <h3 class="board-label">Tabuleiro Inimigo</h3>
+                <div id="enemy-board" class="board board-attack"></div>
+            </div>
+        </div>
+
+        <!-- Botão para PvP: passar o turno -->
+        <div id="pass-turn-area" style="display: none; text-align: center; margin-top: 12px">
+            <button class="btn btn-primary" onclick="passTurn()">
+                🔁 Passar para o próximo jogador
+            </button>
+        </div>
+    </div>
+
+    <!-- TELA DE VITÓRIA -->
+    <div id="screen-victory" class="screen">
+        <div class="victory-container">
+            <div class="victory-trophy">🏆</div>
+            <h1 id="victory-title">Vitória!</h1>
+            <p id="victory-subtitle">Parabéns!</p>
+            <div class="victory-stats" id="victory-stats"></div>
+            <div class="victory-buttons">
+                <button class="btn btn-primary" onclick="playAgain()">
+                    🔄 Jogar Novamente
+                </button>
+                <button class="btn btn-secondary" onclick="backToMenu()">
+                    🏠 Menu Principal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- OVERLAY PvP: esconder tabuleiro entre turnos -->
+    <div id="pvp-overlay" class="pvp-overlay" style="display: none">
+        <div class="pvp-overlay-content">
+            <h2 id="overlay-title">Passe o dispositivo</h2>
+            <p id="overlay-msg">para o próximo jogador</p>
+            <button class="btn btn-primary btn-lg" onclick="hidePvpOverlay()">
+                👁️ Estou pronto
+            </button>
+        </div>
+    </div>
+
+    <script src="./scripts/game.js"></script>
+</body>
+
+</html>
