@@ -2,6 +2,8 @@
 
 <p>Projeto simples de <strong>Batalha Naval</strong> implementado em HTML, CSS e JavaScript. O jogo oferece modos contra a máquina (PvE) com uma IA baseada em estratégias <em>hunt/target</em> e modo local 1 vs 1 (PvP) em um mesmo dispositivo.</p>
 
+<img width="1691" height="862" alt="image" src="https://github.com/user-attachments/assets/3702d5d5-321b-466a-a4ef-c9a72f4c3696" />
+
 <section>
 	<h2>Recursos</h2>
 	<ul>
@@ -11,6 +13,11 @@
 		<li>Regra: ao acertar um navio, o jogador continua jogando até errar.</li>
 		<li>Feedback visual (acertos, erros, afundados) e log de batalha.</li>
 	</ul>
+</section>
+
+<section>
+	<h2>VERCEL</h2>
+	<p>O jogo está disponível na Vercel para teste, você pode acessar pelo link: <a href="https://batalha-naval-game-three.vercel.app/" target="_blank" rel="noopener noreferrer">Jogo</a></p>
 </section>
 
 <section>
