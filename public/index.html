@@ -5,8 +5,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Batalha Naval</title>
-    <link rel="icon" type="image/x-icon/png/jpeg/jpg" href="./assets/favicon.png">
-    <link rel="stylesheet" href="./styles/style.css">
+    <link rel="icon" type="image/x-icon/png/jpeg/jpg" href="/assets/favicon.png">
+    <link rel="stylesheet" href="/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 
@@ -54,6 +54,7 @@
             <div class="mode-row">
                 <button class="btn btn-primary btn-lg" onclick="selectMode('pve')">[ VS BOT ]</button>
                 <button class="btn btn-lg" onclick="selectMode('pvp')" style="background:#1a3a5c;">[ 1 VS 1 ]</button>
+                <button class="btn btn-lg" onclick="selectMode('online')" style="background:#1a6a7c;">[ ONLINE ]</button>
             </div>
 
             <div id="diff-section" style="display:none;">
@@ -77,6 +78,27 @@
                     <li>X = acerto | . = erro | # = afundado</li>
                 </ul>
             </div>
+        </div>
+    </div>
+
+    <div id="screen-lobby" class="screen">
+        <div class="lobby-container pixel-box">
+            <h2>> MULTIJOGADOR ONLINE</h2>
+            <div id="lobby-menu">
+                <button class="btn btn-primary btn-lg" onclick="createLobby()">[ CRIAR LOBBY ]</button>
+                <div class="join-lobby-row">
+                    <input id="lobby-code" class="lobby-input" maxlength="4" autocomplete="off"
+                        placeholder="CODIGO" aria-label="Codigo do lobby">
+                    <button class="btn btn-lg" onclick="joinLobby()">[ ENTRAR ]</button>
+                </div>
+            </div>
+            <div id="lobby-waiting" style="display:none;">
+                <p>CODIGO DO LOBBY</p>
+                <strong id="lobby-code-display">----</strong>
+                <p id="lobby-status">Aguardando o adversario...</p>
+            </div>
+            <p id="lobby-error" class="lobby-error"></p>
+            <button class="btn btn-danger" onclick="leaveLobby()">[ VOLTAR ]</button>
         </div>
     </div>
 
@@ -192,7 +214,8 @@
                 </div>
             </div>
         </div>
-    <script src="./scripts/game.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/game.js"></script>
 </body>
 
 </html>

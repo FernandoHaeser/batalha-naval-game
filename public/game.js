@@ -62,6 +62,11 @@ let state = {
         firstHit: null,
         attacked: new Set(),
     },
+    online: {
+        socket: null,
+        playerNumber: null,
+        lobbyCode: null,
+    },
 };
 
 function createEmptyBoard() {
@@ -327,13 +332,18 @@ function showScreen(id) {
     if (exitOverlay) exitOverlay.style.display = 'none';
 }
 
-function backToMenu() { resetState(); showScreen('menu'); }
-function playAgain() { resetState(); showScreen('menu'); }
+function backToMenu() {
+    if (state.online.socket && state.online.lobbyCode) state.online.socket.emit('leave-lobby');
+    resetState();
+    showScreen('menu');
+}
+function playAgain() { backToMenu(); }
 
 function resetState() {
     const { mode, difficulty } = state;
+    const nextMode = mode === 'online' ? 'pve' : mode;
     state = {
-        mode, difficulty,
+        mode: nextMode, difficulty,
         phase: 'menu',
         currentPlacer: 1,
         currentTurn: 1,
@@ -344,6 +354,7 @@ function resetState() {
         remaining: { 1: [...SHIP_TYPES], 2: [...SHIP_TYPES] },
         stats: { shots: 0, hits: 0, start: null },
         ai: { mode: 'hunt', lastHit: null, targetQueue: [], dirQueue: [], hitDir: null, firstHit: null, attacked: new Set() },
+        online: { socket: state.online.socket, playerNumber: state.online.playerNumber, lobbyCode: state.online.lobbyCode },
     };
 }
 
@@ -352,10 +363,57 @@ function selectMode(mode) {
     const diffSection = document.getElementById('diff-section');
     if (mode === 'pve') {
         diffSection.style.display = 'block';
+    } else if (mode === 'online') {
+        diffSection.style.display = 'none';
+        showScreen('lobby');
     } else {
         diffSection.style.display = 'none';
         startGame('pvp', null);
     }
+}
+
+function getOnlineSocket() {
+    if (!state.online.socket && window.io) {
+        state.online.socket = window.io();
+        setupOnlineListeners(state.online.socket);
+    }
+    return state.online.socket;
+}
+
+function createLobby() {
+    const socket = getOnlineSocket();
+    if (!socket) return;
+    document.getElementById('lobby-error').textContent = '';
+    socket.emit('create-lobby');
+}
+
+function joinLobby() {
+    const socket = getOnlineSocket();
+    if (!socket) return;
+    const input = document.getElementById('lobby-code');
+    const code = input.value.trim();
+    document.getElementById('lobby-error').textContent = '';
+    socket.emit('join-lobby', { code });
+}
+
+function showLobbyWaiting(code) {
+    state.online.lobbyCode = code;
+    document.getElementById('lobby-menu').style.display = 'none';
+    document.getElementById('lobby-waiting').style.display = 'block';
+    document.getElementById('lobby-code-display').textContent = code;
+}
+
+function leaveLobby() {
+    if (state.online.socket && state.online.lobbyCode) {
+        state.online.socket.emit('leave-lobby');
+    }
+    state.online.lobbyCode = null;
+    state.online.playerNumber = null;
+    document.getElementById('lobby-menu').style.display = 'block';
+    document.getElementById('lobby-waiting').style.display = 'none';
+    document.getElementById('lobby-error').textContent = '';
+    state.mode = 'pve';
+    showScreen('menu');
 }
 
 function startGame(mode, diff) {
@@ -517,7 +575,13 @@ function updateReadyButton(playerNum) {
 }
 
 function playerReady() {
-    if (state.mode === 'pve') {
+    if (state.mode === 'online') {
+        const socket = getOnlineSocket();
+        if (socket) socket.emit('player-ready', {
+            board: state.boards[state.online.playerNumber],
+            ships: state.ships[state.online.playerNumber],
+        });
+    } else if (state.mode === 'pve') {
         const { board, ships } = randomPlacementForPlayer(2);
         state.boards[2] = board;
         state.ships[2] = ships;
@@ -545,8 +609,12 @@ function startGamePhase() {
 }
 
 function renderGameScreen() {
-    document.getElementById('p1-name').textContent = 'JOGADOR 1';
-    document.getElementById('p2-name').textContent = state.mode === 'pve' ? 'BOT' : 'JOGADOR 2';
+    document.getElementById('p1-name').textContent = state.mode === 'online'
+        ? 'VOCE'
+        : 'JOGADOR 1';
+    document.getElementById('p2-name').textContent = state.mode === 'pve'
+        ? 'BOT'
+        : (state.mode === 'online' ? 'ADVERSARIO' : 'JOGADOR 2');
 
     // Show difficulty badge
     const badge = document.getElementById('turn-badge');
@@ -561,6 +629,11 @@ function renderGameScreen() {
 }
 
 function renderGameBoards() {
+    if (state.mode === 'online' && state.online.playerNumber === 2) {
+        renderBoardDisplay('player-board', state.boards[2], state.ships[2], false, 2);
+        renderBoardDisplay('enemy-board', state.boards[1], state.ships[1], true, 1);
+        return;
+    }
     renderBoardDisplay('player-board', state.boards[1], state.ships[1], false, 1);
     renderBoardDisplay('enemy-board', state.boards[2], state.ships[2], true, 2);
 }
@@ -601,13 +674,24 @@ function renderBoardDisplay(boardId, board, ships, isAttack, playerNum) {
 
 function canAttack(r, c) {
     if (state.phase !== 'game') return false;
-    if (state.currentTurn !== 1) return false;
-    const val = state.boards[2][r][c];
+    if (state.mode === 'online') {
+        if (state.currentTurn !== state.online.playerNumber) return false;
+    } else if (state.currentTurn !== 1) {
+        return false;
+    }
+    const target = state.mode === 'online'
+        ? (state.online.playerNumber === 1 ? 2 : 1)
+        : 2;
+    const val = state.boards[target][r][c];
     return val === CELL.EMPTY || val === CELL.SHIP;
 }
 
 function handleAttack(row, col) {
     if (!canAttack(row, col)) return;
+    if (state.mode === 'online') {
+        getOnlineSocket()?.emit('attack', { row, col });
+        return;
+    }
 
     const result = attack(state.boards[2], state.ships[2], row, col);
     if (!result) return;
@@ -726,7 +810,15 @@ function handlePvpAttack(row, col) {
 
 function updateTurnUI() {
     const badge = document.getElementById('turn-badge');
-    if (state.mode === 'pve') {
+    if (state.mode === 'online') {
+        if (state.currentTurn === state.online.playerNumber) {
+            badge.textContent = '> SEU TURNO';
+            badge.className = 'turn-badge';
+        } else {
+            badge.textContent = '> TURNO ADVERSARIO';
+            badge.className = 'turn-badge enemy-turn';
+        }
+    } else if (state.mode === 'pve') {
         if (state.currentTurn === 1) {
             badge.textContent = '> SEU TURNO';
             badge.className = 'turn-badge';
@@ -741,8 +833,12 @@ function updateTurnUI() {
 }
 
 function updateShipCounts() {
-    const s1 = state.ships[1].filter(s => !s.sunk).length;
-    const s2 = state.ships[2].filter(s => !s.sunk).length;
+    const own = state.mode === 'online'
+        ? state.online.playerNumber
+        : 1;
+    const enemy = own === 1 ? 2 : 1;
+    const s1 = state.ships[own].filter(s => !s.sunk).length;
+    const s2 = state.ships[enemy].filter(s => !s.sunk).length;
     document.getElementById('p1-ships').textContent = `NAVIOS: ${s1}`;
     document.getElementById('p2-ships').textContent = `NAVIOS: ${s2}`;
 }
@@ -780,7 +876,19 @@ function endGame(winnerNum) {
     const iconEl = document.getElementById('victory-icon');
     const statsEl = document.getElementById('victory-stats');
 
-    if (state.mode === 'pve') {
+    if (state.mode === 'online') {
+        if (winnerNum === state.online.playerNumber) {
+            iconEl.textContent = '*** WIN ***';
+            iconEl.style.color = '#ffe600';
+            titleEl.textContent = 'VITORIA!';
+            subtitleEl.textContent = 'Voce venceu a batalha!';
+        } else {
+            iconEl.textContent = '--- KO ---';
+            iconEl.style.color = '#ff2020';
+            titleEl.textContent = 'DERROTA!';
+            subtitleEl.textContent = 'O adversario venceu a batalha.';
+        }
+    } else if (state.mode === 'pve') {
         if (winnerNum === 1) {
             iconEl.textContent = '*** WIN ***';
             iconEl.style.color = '#ffe600';
@@ -839,6 +947,104 @@ function hideExitOverlay() {
 function confirmExit() {
     hideExitOverlay();
     backToMenu();
+}
+
+function setupOnlineListeners(socket) {
+    socket.on('lobby-created', ({ code, playerNumber }) => {
+        state.online.playerNumber = playerNumber;
+        showLobbyWaiting(code);
+    });
+
+    socket.on('lobby-joined', ({ code, playerNumber }) => {
+        state.online.playerNumber = playerNumber;
+        showLobbyWaiting(code);
+    });
+
+    socket.on('lobby-error', ({ message }) => {
+        document.getElementById('lobby-error').textContent = message;
+    });
+
+    socket.on('lobby-state', ({ connected }) => {
+        if (connected === 2) {
+            document.getElementById('lobby-status').textContent = 'Adversario conectado!';
+            const playerNumber = state.online.playerNumber;
+            state.currentPlacer = playerNumber;
+            setTimeout(() => {
+                showScreen('placement');
+                buildBoardLabels('placement-col-labels', 'placement-row-labels');
+                renderPlacementScreen(playerNumber);
+            }, 400);
+        }
+    });
+
+    socket.on('player-ready', ({ playerNumber }) => {
+        if (playerNumber !== state.online.playerNumber) {
+            document.getElementById('placement-subtitle').textContent =
+                'Adversario pronto. Aguardando voce...';
+        }
+    });
+
+    socket.on('game-start', ({ turn }) => {
+        state.phase = 'game';
+        state.currentTurn = turn;
+        state.stats.start = Date.now();
+        showScreen('game');
+        buildBoardLabels('game-col-labels-1', 'game-row-labels-1');
+        buildBoardLabels('game-col-labels-2', 'game-row-labels-2');
+        renderGameScreen();
+    });
+
+    socket.on('attack-result', ({ attacker, target, row, col, result, sunkShip }) => {
+        const board = state.boards[target];
+        const ships = state.ships[target];
+        board[row][col] = result === 'hit' ? CELL.HIT : CELL.MISS;
+        if (result === 'hit') {
+            for (const ship of ships) {
+                if (ship.positions && ship.positions.some(([r, c]) => r === row && c === col)) {
+                    ship.hits = (ship.hits || 0) + 1;
+                }
+            }
+        }
+        if (sunkShip) {
+            for (const [r, c] of sunkShip.positions) board[r][c] = CELL.SUNK;
+            const sunk = ships.find(ship => ship.positions &&
+                ship.positions.some(([r, c]) => r === sunkShip.positions[0][0] && c === sunkShip.positions[0][1]));
+            if (sunk) sunk.sunk = true;
+        }
+
+        const label = `[${COLS[col]}${row + 1}]`;
+        if (attacker === state.online.playerNumber) {
+            state.stats.shots++;
+            if (result !== 'miss') state.stats.hits++;
+            addLog(result === 'miss' ? `ERRO ${label}` : `ACERTO ${label}`,
+                result === 'miss' ? 'miss' : 'hit');
+        } else {
+            addLog(result === 'miss' ? `INIMIGO ERROU ${label}` : `INIMIGO ACERTOU ${label}`,
+                result === 'miss' ? 'miss' : 'hit');
+        }
+        renderGameBoards();
+        updateShipCounts();
+    });
+
+    socket.on('turn-changed', ({ turn }) => {
+        state.currentTurn = turn;
+        updateTurnUI();
+    });
+
+    socket.on('game-over', ({ winner }) => {
+        endGame(winner);
+    });
+
+    socket.on('opponent-disconnected', () => {
+        if (state.phase === 'game') {
+            state.phase = 'menu';
+            document.getElementById('lobby-error').textContent =
+                'O adversario saiu do lobby.';
+            showScreen('lobby');
+            document.getElementById('lobby-menu').style.display = 'block';
+            document.getElementById('lobby-waiting').style.display = 'none';
+        }
+    });
 }
 
 window.addEventListener('beforeunload', (e) => {

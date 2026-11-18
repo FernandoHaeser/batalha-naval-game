@@ -22,9 +22,10 @@
 
 <section>
 	<h2>Como executar</h2>
-	<p>Abra uma sessão HTTP local na pasta do projeto e acesse no navegador. Um exemplo usando Python:</p>
-	<pre><code>python3 -m http.server 8000
-# então abra http://localhost:8000</code></pre>
+		<p>Instale as dependências e inicie o servidor do jogo:</p>
+		<pre><code>npm install
+	npm start
+	# então abra http://localhost:3000</code></pre>
 </section>
 
 <section>

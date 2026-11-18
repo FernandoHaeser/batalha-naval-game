@@ -1,9 +1,10 @@
 {
   "name": "batalha-naval-game",
-  "version": "1.0.0",
-  "description": "<h1>Batalha Naval — Jogo em JavaScript</h1>",
-  "main": "index.js",
+  "version": "2.1.0",
+  "description": "<h1>Batalha Naval — Jogo OpenSource & Online</h1>",
+  "main": "server.js",
   "scripts": {
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

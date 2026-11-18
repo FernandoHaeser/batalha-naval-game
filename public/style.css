@@ -913,3 +913,69 @@ body::after {
     height: clamp(24px, 3.5vw, 38px);
   }
 }
+
+/* maybe don't needed that */
+canvas {
+    background: #eee;
+    border: 3px solid white;
+    margin-top: 20px;
+}
+
+.lobby-container {
+  width: min(520px, calc(100vw - 32px));
+  padding: 28px;
+  text-align: center;
+}
+
+.lobby-container h2 {
+  margin-bottom: 24px;
+  color: var(--pixel-cyan);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+#lobby-menu,
+.join-lobby-row,
+#lobby-waiting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.join-lobby-row {
+  flex-direction: row;
+  justify-content: center;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.lobby-input {
+  width: 180px;
+  height: 48px;
+  border: 3px solid var(--pixel-cyan);
+  background: #07111d;
+  color: var(--white);
+  font-family: inherit;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.lobby-input:focus {
+  outline: 2px solid var(--pixel-yellow);
+}
+
+#lobby-code-display {
+  display: block;
+  color: var(--pixel-yellow);
+  font-size: 30px;
+  letter-spacing: 8px;
+  margin: 8px 0;
+}
+
+.lobby-error {
+  min-height: 24px;
+  color: var(--pixel-red);
+  margin: 16px 0;
+  font-size: 10px;
+}
