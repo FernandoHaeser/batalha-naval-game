@@ -12,8 +12,8 @@
     "url": "git+https://github.com/FernandoHaeser/batalha-naval-game.git"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Fernando Haeser",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/FernandoHaeser/batalha-naval-game/issues"
   },
