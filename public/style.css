@@ -2967,13 +2967,366 @@ kbd {
     border-top: 2px solid var(--line-soft);
   }
 
-  .stat-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
   .say {
     display: none;
   }
+
+  .menu-title {
+    min-height: 150px;
+  }
+
+  .mode-card {
+    min-height: 0;
+    padding: 16px;
+    gap: 10px;
+  }
+
+  .mode-title {
+    font-size: 15px;
+  }
+
+  .mode-desc {
+    font-size: 13px;
+  }
+
+  .diff-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .diff-card {
+    min-height: 0;
+    padding: 12px;
+  }
+
+  .diff-top {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .diff-label {
+    font-size: 9px;
+  }
+
+  .diff-desc {
+    font-size: 12px;
+  }
+
+  .btn-launch {
+    width: 100%;
+  }
+
+  .lobby-card,
+  .room-card {
+    padding: 20px;
+  }
+
+  .code-input {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .page-heading h1 {
+    font-size: 22px;
+  }
+
+  .placement-body {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .placement-side {
+    display: contents;
+  }
+
+  .placement-side > div:first-child { order: 1; }
+  .ready-panel { order: 2; }
+  .dock { order: 3; }
+  .placement-board-wrap { order: 4; flex: none; max-width: none; }
+  .tools { order: 5; }
+  .btn-ready { order: 6; }
+
+  .placement-title {
+    font-size: 15px;
+    margin-bottom: 6px;
+  }
+
+  .dock {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .dock-item {
+    min-height: 0;
+    padding: 8px 10px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .dock-name {
+    font-size: 8px;
+  }
+
+  .dock-blocks i {
+    width: 12px;
+    height: 10px;
+    border-bottom-width: 2px;
+  }
+
+  .dock-status {
+    font-size: 10px;
+  }
+
+  .tool {
+    min-height: 48px;
+    font-size: 8px;
+  }
+
+  .col-labels {
+    margin-left: 20px;
+    font-size: 8px;
+  }
+
+  .row-labels {
+    width: 20px;
+    font-size: 8px;
+  }
+
+  .placement-wait {
+    left: 20px;
+  }
+
+  .radar-sm {
+    width: 72px;
+    height: 72px;
+  }
+
+  .placement-wait-title {
+    font-size: 11px;
+  }
+
+  .hint {
+    margin-left: 20px;
+  }
+
+  .game-header {
+    gap: 10px;
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 10px;
+  }
+
+  .player-block {
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .player-name {
+    font-size: 9px;
+  }
+
+  .fleet-pips i {
+    width: 12px;
+    height: 7px;
+  }
+
+  .turn-banner {
+    padding: 10px 14px;
+  }
+
+  .banner-title {
+    font-size: 12px;
+  }
+
+  .banner-sub {
+    font-size: 12px;
+  }
+
+  .battle {
+    gap: 18px;
+  }
+
+  .board-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding-left: 20px;
+  }
+
+  .board-title {
+    font-size: 10px;
+    line-height: 1.4;
+  }
+
+  #screen-game.mode-online .own-panel {
+    width: 100%;
+    max-width: 300px;
+    justify-self: center;
+  }
+
+  #screen-game.mode-online .own-panel .board-head {
+    padding-left: 20px;
+  }
+
+  .own-panel .col-labels { margin-left: 18px; }
+
+  .radio-messages {
+    flex-basis: 100%;
+    height: 104px;
+    font-size: 13px;
+  }
+
+  .quick-btn {
+    min-height: 40px;
+  }
+
+  .radio-input {
+    font-size: 16px;
+  }
+
+  .screen-victory {
+    padding: 32px 16px;
+  }
+
+  .victory-body {
+    gap: 24px;
+  }
+
+  .victory-emblem {
+    width: 110px;
+    height: 110px;
+  }
+
+  .victory-emblem svg {
+    width: 76px;
+    height: 76px;
+  }
+
+  .duel {
+    padding: 14px;
+  }
+
+  .duel-head {
+    gap: 8px;
+  }
+
+  .duel-side,
+  .duel-side-right {
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .duel-side-right {
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+  }
+
+  .duel-who,
+  .duel-side-right .duel-who {
+    align-items: center;
+  }
+
+  .duel-tag,
+  .duel-side-right .duel-tag {
+    align-self: center;
+  }
+
+  .duel-name {
+    font-size: 9px;
+  }
+
+  .duel-row {
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    gap: 8px;
+  }
+
+  .duel-val {
+    font-size: 11px;
+  }
+
+  .duel-label {
+    font-size: 10px;
+    letter-spacing: 0;
+    text-align: center;
+  }
+
+  .stat-grid {
+    flex-basis: 100%;
+    gap: 8px;
+  }
+
+  .stat {
+    padding: 12px;
+    gap: 6px;
+  }
+
+  .stat-value {
+    font-size: 18px;
+  }
+
+  .stat-note {
+    font-size: 11px;
+  }
+
+  .victory-maps {
+    flex-basis: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .victory-maps .shot-map-box {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .victory-buttons {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .victory-buttons .btn-cta {
+    width: 100%;
+  }
+
+  .finale-kicker {
+    font-size: 8px;
+  }
+}
+
+@media (hover: none) {
+  .hint {
+    display: none;
+  }
+}
+
+button,
+.cell {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@supports (min-height: 100dvh) {
+  body,
+  .screen:not(.screen-menu) {
+    min-height: 100dvh;
+  }
+
+  .has-radio .screen:not(.screen-menu) {
+    min-height: 0;
+  }
+}
+
+.radio {
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 @media (prefers-reduced-motion: reduce) {
