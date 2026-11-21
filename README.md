@@ -86,7 +86,7 @@ npm start
 		<li><code>scripts/build-config.js</code>: gera <code>public/config.js</code> a partir de <code>SOCKET_SERVER_URL</code>.</li>
 		<li><code>vercel.json</code> / <code>.vercelignore</code>: deploy do front estático na Vercel.</li>
 		<li><code>render.yaml</code>: deploy do servidor online no Render.</li>
-		<li><code>docs/</code>: documentação técnica (<a href="docs/online-mode.md">modo online</a>, <a href="docs/deploy-vercel.md">deploy</a>).</li>
+		<li><code>docs/</code>: documentação técnica (<a href="docs/interface.md">interface</a>, <a href="docs/online-mode.md">modo online</a>, <a href="docs/deploy-vercel.md">deploy</a>).</li>
 	</ul>
 </section>
 

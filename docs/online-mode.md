@@ -65,8 +65,12 @@ Regras aplicadas pelo servidor:
 
 No cliente:
 
-- o botão **CHAT** fica no canto inferior direito e só aparece no modo online com uma sala ativa;
-- mensagens do adversário recebidas com o painel fechado aparecem como contador no botão;
+- o chat é o painel **RÁDIO**, abaixo da tela ativa; só aparece no modo online com uma sala ativa;
+- tem reações rápidas (`GG`, `BOA!`, `OPS`, `JÁ ERA`, `QUASE!`, `SORTE`), que viram mensagens normais;
+- **Silenciar** desativa o envio e esconde as mensagens do adversário (as do sistema continuam);
+- minimizado, o painel mostra só a última linha;
+- durante a partida, cada mensagem também aparece como balão ao lado do avatar de quem enviou;
+- o próprio cliente escreve linhas de sistema (`»`) para eventos da partida: início, acertos, navios afundados;
 - as mensagens são inseridas com `textContent`, nunca como HTML;
 - o histórico é limpo ao entrar em um novo lobby ou quando o adversário sai;
 - com o campo de mensagem focado, a tecla **[R]** não rotaciona navios.
