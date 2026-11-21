@@ -2317,7 +2317,7 @@ kbd {
   align-items: center;
   justify-content: center;
   padding: 24px 16px;
-  background: radial-gradient(ellipse at 50% 45%, rgba(10, 28, 50, .92), rgba(3, 8, 15, .97) 70%);
+  background: radial-gradient(ellipse at 50% 45%, rgba(10, 28, 50, .96), rgba(3, 8, 15, .99) 70%);
   cursor: pointer;
   overflow: hidden;
 }
@@ -2576,7 +2576,7 @@ kbd {
   opacity: 0;
 }
 
-.finale.play .finale-ripple { animation: finale-ripple 1.4s ease-out 2.6s both; }
+.finale.play .finale-ripple { animation: finale-ripple 1.4s ease-out 2.6s forwards; }
 
 @keyframes finale-ripple {
   0% { transform: translateX(-50%) scaleX(.2); opacity: 1; }
