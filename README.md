@@ -49,7 +49,8 @@
 		<li>Git.</li>
 	</ul>
 
-	<h3>Passo a passo</h3>
+
+<h3>Passo a passo</h3>
 <pre><code>git clone https://github.com/FernandoHaeser/batalha-naval-game.git
 cd batalha-naval-game
 npm install
@@ -57,7 +58,7 @@ npm start
 </code></pre>
 	<p>Abra <a href="http://localhost:3000">http://localhost:3000</a>. O mesmo servidor entrega o front e o modo online, sem nenhuma configuração extra.</p>
 
-	<h3>Testar o modo online localmente</h3>
+<h3>Testar o modo online localmente</h3>
 	<ol>
 		<li>Abra <code>http://localhost:3000</code> em duas abas (ou em outro dispositivo da mesma rede usando <code>http://&lt;IP-da-sua-máquina&gt;:3000</code>).</li>
 		<li>Na primeira aba: <strong>ONLINE → Criar lobby</strong> e copie o código.</li>
@@ -65,7 +66,7 @@ npm start
 		<li>Posicione os navios nas duas abas. A partida começa pelo Jogador 1 (quem criou o lobby).</li>
 	</ol>
 
-	<h3>Variáveis de ambiente (opcionais)</h3>
+<h3>Variáveis de ambiente (opcionais)</h3>
 	<table>
 		<tr><th>Variável</th><th>Padrão</th><th>Descrição</th></tr>
 		<tr><td><code>PORT</code></td><td><code>3000</code></td><td>Porta do servidor.</td></tr>
