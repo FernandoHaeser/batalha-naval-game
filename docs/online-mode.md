@@ -7,14 +7,14 @@ O servidor (`server.js`) é a **fonte da verdade**: guarda os tabuleiros, valida
 1. `create-lobby` → o servidor cria a sala com um código de 4 caracteres; quem criou é o **Jogador 1**.
 2. `join-lobby { code }` → o segundo jogador entra como **Jogador 2**; os dois recebem `lobby-state { connected: 2 }` e vão para o posicionamento.
 3. `player-ready { board, ships }` → cada jogador envia seu tabuleiro. Um "pronto" repetido, ou enviado com a partida já em andamento, é ignorado, para não reiniciar o jogo e resetar o turno.
-4. Com os dois prontos → `game-start { turn: 1 }`.
+4. Com os dois prontos → `game-start { turn: 1 }`. O servidor repassa cada `player-ready { playerNumber }` para a sala toda; o cliente guarda isso em `state.online.ready` e atualiza o painel de prontos. Ao receber `game-start`, o cliente marca os dois como prontos e espera `GAME_START_DELAY_MS` (1,1 s) antes de trocar para a batalha, para o `2/2` aparecer na tela.
 5. Quando alguém sai (`leave-lobby`) ou cai (`disconnect`), a sala é **encerrada**: quem ficou recebe `opponent-disconnected` e é removido da sala, ficando livre para criar ou entrar em outro lobby.
 
 ## Regra de turno
 
 - **Acertou** → o mesmo jogador ataca de novo.
 - **Errou** → o turno passa ao adversário.
-- **Afundou o último navio** → `game-over`; o turno fica `null`.
+- **Afundou o último navio** → `game-over`; o turno fica `null`. O cliente guarda o último navio afundado (`state.lastSunk`, a partir do `sunkShip`) e, como o modo online tem `finale: true`, toca a animação final antes de mostrar o resultado (`playFinale` em `battle.js`).
 
 O servidor rejeita em silêncio ataques fora do turno, fora do tabuleiro ou em células já atacadas.
 
