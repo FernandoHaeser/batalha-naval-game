@@ -305,9 +305,51 @@ function endGame(winnerNum) {
     byId('btn-rematch').hidden = !currentMode().rematch;
 
     const gameId = state.gameId;
-    setTimeout(() => {
+    const reveal = () => {
         if (state.gameId === gameId && state.phase === 'victory') showScreen('victory');
-    }, 900);
+    };
+    if (currentMode().finale) {
+        setTimeout(() => {
+            if (state.gameId === gameId && state.phase === 'victory') playFinale(won, state.lastSunk, reveal);
+        }, FINALE_LEAD_MS);
+    } else {
+        setTimeout(reveal, 900);
+    }
+}
+
+const FINALE_LEAD_MS = 600;
+const FINALE_MS = 4400;
+let finaleFinish = null;
+
+function playFinale(won, ship, done) {
+    const overlay = byId('finale');
+    overlay.classList.toggle('finale-win', won);
+    overlay.classList.toggle('finale-lose', !won);
+    const size = ship && ship.size ? ship.size : 3;
+    overlay.style.setProperty('--ship-scale', String(0.7 + size * 0.08));
+    byId('finale-kicker').textContent = won ? 'ÚLTIMO NAVIO INIMIGO ATINGIDO' : 'SEU ÚLTIMO NAVIO FOI ATINGIDO';
+    byId('finale-ship-name').textContent = ship && ship.name ? ship.name : 'NAVIO';
+    byId('finale-caption').textContent = won ? 'FROTA INIMIGA DESTRUÍDA' : 'SUA FROTA FOI AFUNDADA';
+    overlay.hidden = false;
+    restartAnimation(overlay, 'play');
+
+    let timer = null;
+    const finish = () => {
+        if (finaleFinish !== finish) return;
+        finaleFinish = null;
+        clearTimeout(timer);
+        overlay.onclick = null;
+        overlay.hidden = true;
+        overlay.classList.remove('play');
+        done();
+    };
+    finaleFinish = finish;
+    timer = setTimeout(finish, FINALE_MS);
+    overlay.onclick = finish;
+}
+
+function skipFinale() {
+    if (finaleFinish) finaleFinish();
 }
 
 function renderConfetti(active) {

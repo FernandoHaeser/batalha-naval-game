@@ -4,6 +4,7 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
         toggleRules(false);
         hideExitOverlay();
+        skipFinale();
         return;
     }
     if (e.target instanceof HTMLInputElement) return;

@@ -31,6 +31,7 @@ const BASE_MODE = {
     turnBanner: () => ({ title: 'SEU TURNO', sub: 'Escolha um alvo no radar' }),
     rematch: true,
     confirmPlacementExit: false,
+    finale: false,
 };
 
 function defineMode(name, impl) {
@@ -67,6 +68,7 @@ function resetState() {
         thinking: false,
         lastShotCell: null,
         lastOwnCell: null,
+        lastSunk: null,
         pvpViewer: 1,
         pvpEvents: [],
         ai: { mode: 'hunt', targetQueue: [], hitDir: null, firstHit: null, attacked: new Set() },

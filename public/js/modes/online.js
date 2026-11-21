@@ -286,6 +286,7 @@ function applyAttackResult({ attacker, target, row, col, result, sunkShip, turn,
         }
     }
     if (sunkShip) {
+        state.lastSunk = { name: sunkShip.name || 'NAVIO', size: sunkShip.positions.length };
         for (const [r, c] of sunkShip.positions) board[r][c] = CELL.SUNK;
         const [r0, c0] = sunkShip.positions[0];
         const sunk = ships.find(ship => ship.positions && ship.positions.some(([r, c]) => r === r0 && c === c0));
@@ -436,6 +437,8 @@ defineMode('online', {
     confirmPlacementExit: true,
 
     rematch: false,
+
+    finale: true,
 
     launch: openLobby,
 
