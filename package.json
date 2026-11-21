@@ -1,11 +1,11 @@
 {
   "name": "batalha-naval-game",
   "version": "2.1.0",
-  "description": "<h1>Batalha Naval — Jogo OpenSource & Online</h1>",
+  "description": "Batalha Naval em JavaScript com modos PvE, PvP local e online (Socket.IO)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build:config": "node scripts/build-config.js"
   },
   "repository": {
     "type": "git",
@@ -21,5 +21,8 @@
   "dependencies": {
     "express": "^5.3.0",
     "socket.io": "^4.8.4"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }

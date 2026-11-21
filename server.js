@@ -7,11 +7,14 @@ const { Server } = require("socket.io");
 const app = express();
 const server = http.createServer(app);
 
-const io = new Server(server);
+const corsOrigin = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(",").map(origin => origin.trim()).filter(Boolean)
+    : "*";
+const io = new Server(server, { cors: { origin: corsOrigin } });
 
 const publicDir = path.join(__dirname, "public");
 app.use(express.static(publicDir));
-app.use("/assets", express.static(path.join(__dirname, "assets")));
+app.get("/health", (req, res) => res.json({ ok: true, rooms: rooms.size }));
 
 const rooms = new Map();
 

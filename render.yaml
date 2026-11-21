@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: batalha-naval-online
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: CORS_ORIGIN
+        sync: false

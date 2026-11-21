@@ -374,7 +374,12 @@ function selectMode(mode) {
 
 function getOnlineSocket() {
     if (!state.online.socket && window.io) {
-        state.online.socket = window.io();
+        const serverUrl = (window.SOCKET_SERVER_URL || '').trim();
+        state.online.socket = serverUrl ? window.io(serverUrl) : window.io();
+        state.online.socket.on('connect_error', () => {
+            const el = document.getElementById('lobby-error');
+            if (el) el.textContent = 'Nao foi possivel conectar ao servidor online.';
+        });
         setupOnlineListeners(state.online.socket);
     }
     return state.online.socket;
