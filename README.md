@@ -80,13 +80,13 @@ npm start
 		<li><code>server.js</code>: servidor Express + Socket.IO (serve o front e controla lobbies, turnos, ataques e chat do modo online).</li>
 		<li><code>public/index.html</code>: interface do jogo.</li>
 		<li><code>public/style.css</code>: folhas de estilo e tema visual.</li>
-		<li><code>public/game.js</code>: lógica do jogo no navegador (posicionamento, ataques, IA, fluxo de telas, cliente online).</li>
+		<li><code>public/js/</code>: lógica do jogo no navegador, separada por modo (veja <a href="docs/client-code.md">código do cliente</a>).</li>
 		<li><code>public/config.js</code>: URL do servidor online usada pelo front (gerada no build da Vercel).</li>
 		<li><code>public/assets/</code>: imagens (favicon).</li>
 		<li><code>scripts/build-config.js</code>: gera <code>public/config.js</code> a partir de <code>SOCKET_SERVER_URL</code>.</li>
 		<li><code>vercel.json</code> / <code>.vercelignore</code>: deploy do front estático na Vercel.</li>
 		<li><code>render.yaml</code>: deploy do servidor online no Render.</li>
-		<li><code>docs/</code>: documentação técnica (<a href="docs/interface.md">interface</a>, <a href="docs/online-mode.md">modo online</a>, <a href="docs/deploy-vercel.md">deploy</a>).</li>
+		<li><code>docs/</code>: documentação técnica (<a href="docs/interface.md">interface</a>, <a href="docs/client-code.md">código do cliente</a>, <a href="docs/online-mode.md">modo online</a>, <a href="docs/deploy-vercel.md">deploy</a>).</li>
 	</ul>
 </section>
 

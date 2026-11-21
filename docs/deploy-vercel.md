@@ -73,7 +73,7 @@ O front estático não lê variáveis de ambiente diretamente. No build, `script
 window.SOCKET_SERVER_URL = "https://batalha-naval-online.onrender.com";
 ```
 
-O `index.html` carrega `config.js` antes do `game.js`, que conecta com `io(window.SOCKET_SERVER_URL)`. Quando o valor está vazio (caso do arquivo versionado no repositório), o cliente conecta no mesmo domínio que serviu a página. É isso que faz o `npm start` local funcionar sem configuração extra.
+O `index.html` carrega `config.js` antes dos scripts do jogo; o modo online (`public/js/modes/online.js`) conecta com `io(window.SOCKET_SERVER_URL)`. Quando o valor está vazio (caso do arquivo versionado no repositório), o cliente conecta no mesmo domínio que serviu a página. É isso que faz o `npm start` local funcionar sem configuração extra.
 
 O cliente Socket.IO vem do CDN jsDelivr (`socket.io-client@4.8.1`), porque `/socket.io/socket.io.js` só existe quando a página é servida pelo próprio `server.js`.
 

@@ -1,6 +1,6 @@
 # Modo online: arquitetura e lógica de turnos
 
-O servidor (`server.js`) é a **fonte da verdade**: guarda os tabuleiros, valida cada ataque e decide de quem é o turno. O cliente (`public/game.js`) só envia intenções e reflete o que o servidor manda.
+O servidor (`server.js`) é a **fonte da verdade**: guarda os tabuleiros, valida cada ataque e decide de quem é o turno. O cliente (`public/js/modes/online.js`) só envia intenções e reflete o que o servidor manda.
 
 ## Ciclo de vida da sala
 

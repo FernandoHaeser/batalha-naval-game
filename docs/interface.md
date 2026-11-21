@@ -1,6 +1,6 @@
 # Interface
 
-O visual segue o canvas de design "Batalha Naval — nova interface" (claude.ai). Toda a interface está em `public/index.html` + `public/style.css`; `public/game.js` só troca classes e textos.
+O visual segue o canvas de design "Batalha Naval — nova interface" (claude.ai). Toda a interface está em `public/index.html` + `public/style.css`, sem nenhum estilo inline no HTML; os scripts em `public/js/` só trocam classes, textos e o atributo `hidden`.
 
 ## Identidade
 
