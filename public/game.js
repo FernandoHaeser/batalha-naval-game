@@ -330,6 +330,7 @@ function showScreen(id) {
     if (exitBtn) exitBtn.style.display = (id === 'menu') ? 'none' : 'block';
     const exitOverlay = document.getElementById('exit-overlay');
     if (exitOverlay) exitOverlay.style.display = 'none';
+    updateChatVisibility();
 }
 
 function backToMenu() {
@@ -406,6 +407,7 @@ function showLobbyWaiting(code) {
     document.getElementById('lobby-menu').style.display = 'none';
     document.getElementById('lobby-waiting').style.display = 'block';
     document.getElementById('lobby-code-display').textContent = code;
+    clearChat();
 }
 
 function leaveLobby() {
@@ -928,6 +930,7 @@ function endGame(winnerNum) {
 }
 
 document.addEventListener('keydown', e => {
+    if (e.target instanceof HTMLInputElement) return;
     if ((e.key === 'r' || e.key === 'R') && state.phase === 'placement') rotateShip();
 });
 
@@ -1054,10 +1057,16 @@ function setupOnlineListeners(socket) {
         endGame(winner);
     });
 
+    socket.on('chat-message', ({ playerNumber, text }) => {
+        appendChatMessage(playerNumber, text);
+    });
+
     socket.on('opponent-disconnected', () => {
+        clearChat();
         state.online.lobbyCode = null;
         state.online.playerNumber = null;
         state.online.shipsLeft = null;
+        updateChatVisibility();
         if (state.mode === 'online' && state.phase !== 'victory') {
             const keepMode = state.mode;
             resetState();
@@ -1069,6 +1078,82 @@ function setupOnlineListeners(socket) {
             document.getElementById('lobby-waiting').style.display = 'none';
         }
     });
+}
+
+const CHAT_SCREENS = ['placement', 'game', 'victory'];
+let chatOpen = false;
+let chatUnread = 0;
+
+function isChatAvailable() {
+    return state.mode === 'online'
+        && Boolean(state.online.lobbyCode)
+        && CHAT_SCREENS.includes(state.phase);
+}
+
+function updateChatVisibility() {
+    const widget = document.getElementById('chat-widget');
+    if (!widget) return;
+    const available = isChatAvailable();
+    widget.style.display = available ? 'block' : 'none';
+    if (!available) setChatOpen(false);
+}
+
+function setChatOpen(open) {
+    chatOpen = open;
+    document.getElementById('chat-panel').style.display = open ? 'flex' : 'none';
+    document.getElementById('chat-toggle').style.display = open ? 'none' : 'inline-flex';
+    if (open) {
+        chatUnread = 0;
+        renderChatUnread();
+        const messages = document.getElementById('chat-messages');
+        messages.scrollTop = messages.scrollHeight;
+        document.getElementById('chat-input').focus();
+    }
+}
+
+function toggleChat() {
+    setChatOpen(!chatOpen);
+}
+
+function renderChatUnread() {
+    const badge = document.getElementById('chat-unread');
+    badge.textContent = chatUnread > 9 ? '9+' : String(chatUnread);
+    badge.style.display = chatUnread > 0 ? 'inline-block' : 'none';
+}
+
+function sendChatMessage(event) {
+    event.preventDefault();
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text || !state.online.socket || !state.online.lobbyCode) return;
+    state.online.socket.emit('chat-message', { text });
+    input.value = '';
+}
+
+function appendChatMessage(playerNumber, text) {
+    const messages = document.getElementById('chat-messages');
+    const mine = playerNumber === state.online.playerNumber;
+    const entry = document.createElement('div');
+    entry.className = `chat-message ${mine ? 'chat-mine' : 'chat-theirs'}`;
+    const author = document.createElement('span');
+    author.className = 'chat-author';
+    author.textContent = mine ? 'VOCE' : 'ADVERSARIO';
+    const body = document.createElement('span');
+    body.className = 'chat-text';
+    body.textContent = text;
+    entry.append(author, body);
+    messages.append(entry);
+    messages.scrollTop = messages.scrollHeight;
+    if (!chatOpen && !mine) {
+        chatUnread++;
+        renderChatUnread();
+    }
+}
+
+function clearChat() {
+    document.getElementById('chat-messages').replaceChildren();
+    chatUnread = 0;
+    renderChatUnread();
 }
 
 window.addEventListener('beforeunload', (e) => {
