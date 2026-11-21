@@ -2,7 +2,26 @@
 
 <p>Projeto de <strong>Batalha Naval</strong> em HTML, CSS e JavaScript. Tem três modos: contra a máquina (PvE), com uma IA baseada em estratégias <em>hunt/target</em>; 1 vs 1 local (PvP) no mesmo dispositivo; e <strong>online</strong>, com lobby por código via Socket.IO.</p>
 
-<img width="1691" height="862" alt="image" src="https://github.com/user-attachments/assets/3702d5d5-321b-466a-a4ef-c9a72f4c3696" />
+<img src="docs/images/menu.png" alt="Menu do jogo com os modos VS Bot, 1 VS 1 e Online" />
+
+<section>
+	<h2>Telas</h2>
+	<table>
+		<tr>
+			<td><img src="docs/images/placement.png" alt="Posicionamento da frota" /><br /><sub>Posicionamento da frota</sub></td>
+			<td><img src="docs/images/battle-bot.png" alt="Batalha contra o bot" /><br /><sub>Batalha contra o bot</sub></td>
+		</tr>
+		<tr>
+			<td><img src="docs/images/online.png" alt="Partida online com o rádio (chat)" /><br /><sub>Partida online com o rádio (chat)</sub></td>
+			<td><img src="docs/images/lobby.png" alt="Lobby online aguardando o adversário" /><br /><sub>Lobby online</sub></td>
+		</tr>
+		<tr>
+			<td><img src="docs/images/pvp-swap.png" alt="Troca de aparelho no 1 VS 1" /><br /><sub>Troca de aparelho no 1 VS 1</sub></td>
+			<td><img src="docs/images/victory.png" alt="Tela de vitória com estatísticas" /><br /><sub>Resultado da partida</sub></td>
+		</tr>
+	</table>
+	<p align="center"><img src="docs/images/mobile.png" width="260" alt="Partida online no celular" /><br /><sub>Também funciona no celular</sub></p>
+</section>
 
 <section>
 	<h2>Recursos</h2>
@@ -86,6 +105,7 @@ npm start
 		<li><code>scripts/build-config.js</code>: gera <code>public/config.js</code> a partir de <code>SOCKET_SERVER_URL</code>.</li>
 		<li><code>vercel.json</code> / <code>.vercelignore</code>: deploy do front estático na Vercel.</li>
 		<li><code>render.yaml</code>: deploy do servidor online no Render.</li>
+		<li><code>docs/images/</code>: capturas de tela usadas neste README.</li>
 		<li><code>docs/</code>: documentação técnica (<a href="docs/interface.md">interface</a>, <a href="docs/client-code.md">código do cliente</a>, <a href="docs/online-mode.md">modo online</a>, <a href="docs/deploy-vercel.md">deploy</a>).</li>
 	</ul>
 </section>
@@ -97,5 +117,5 @@ npm start
 
 <section>
 	<h2>Licença</h2>
-	<p>Distribuído sem licença explícita. Atribua uma licença no repositório se desejar torná-lo público.</p>
+	<p>Distribuído sob a licença <a href="LICENSE">MIT</a>.</p>
 </section>
