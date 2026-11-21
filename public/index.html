@@ -6,229 +6,428 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Batalha Naval</title>
     <link rel="icon" type="image/png" href="/assets/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 
 <body>
 
-    <div id="screen-menu" class="screen active">
-        <div class="menu-container">
-            <h1 class="game-title">* BATALHA NAVAL *</h1>
+    <main id="screen-menu" class="screen screen-menu active">
+        <div class="sea" aria-hidden="true">
+            <div class="sky sky-1"></div>
+            <div class="sky sky-2"></div>
+            <div class="sky sky-3"></div>
+            <div class="sky-flash-wrap"><div class="sky-flash"></div></div>
+            <div id="stars"></div>
 
-            <div class="title-fleet">
-                <svg class="title-ship" width="90" height="30" viewBox="0 0 90 30" xmlns="http://www.w3.org/2000/svg"
-                    style="image-rendering:pixelated">
-                    <rect x="0" y="20" width="90" height="6" fill="#556677" />
-                    <rect x="4" y="14" width="82" height="8" fill="#7a9aaa" />
-                    <rect x="8" y="10" width="60" height="6" fill="#99bbcc" />
-                    <rect x="12" y="6" width="30" height="5" fill="#aaccdd" />
-                    <rect x="16" y="2" width="6" height="5" fill="#556677" />
-                    <rect x="26" y="4" width="4" height="4" fill="#445566" />
-                    <rect x="0" y="24" width="90" height="4" fill="#445566" />
-                </svg>
-                <svg class="title-ship" width="70" height="26" viewBox="0 0 70 26" xmlns="http://www.w3.org/2000/svg"
-                    style="image-rendering:pixelated">
-                    <rect x="0" y="16" width="70" height="5" fill="#556677" />
-                    <rect x="4" y="11" width="62" height="7" fill="#7a9aaa" />
-                    <rect x="8" y="7" width="44" height="6" fill="#99bbcc" />
-                    <rect x="12" y="3" width="22" height="5" fill="#aaccdd" />
-                    <rect x="14" y="0" width="5" height="4" fill="#556677" />
-                    <rect x="22" y="2" width="3" height="3" fill="#445566" />
-                    <rect x="0" y="20" width="70" height="4" fill="#445566" />
-                </svg>
-                <svg class="title-ship" width="55" height="22" viewBox="0 0 55 22" xmlns="http://www.w3.org/2000/svg"
-                    style="image-rendering:pixelated">
-                    <rect x="0" y="13" width="55" height="5" fill="#556677" />
-                    <rect x="3" y="8" width="49" height="7" fill="#7a9aaa" />
-                    <rect x="6" y="4" width="32" height="6" fill="#99bbcc" />
-                    <rect x="8" y="1" width="16" height="4" fill="#aaccdd" />
-                    <rect x="10" y="0" width="4" height="2" fill="#556677" />
-                    <rect x="0" y="17" width="55" height="4" fill="#445566" />
-                </svg>
+            <span class="tracer" style="left: 8%; top: 290px; --dx: 380px; --dx-half: 190px; --dy: -120px; animation-delay: -.4s"></span>
+            <span class="tracer" style="left: 62%; top: 292px; --dx: -300px; --dx-half: -150px; --dy: -90px; animation-delay: -2s; animation-duration: 3s"></span>
+            <span class="tracer" style="left: 30%; top: 296px; --dx: 520px; --dx-half: 260px; --dy: -150px; animation-delay: -1.2s; animation-duration: 4.2s"></span>
+
+            <div class="boom" style="left: 14%; top: 262px; animation-delay: -1s">
+                <svg width="44" height="44" viewBox="0 0 11 11"><path d="M4 0h3v2H4zM1 2h3v2H1zM7 2h3v2H7zM2 4h7v4H2zM0 6h2v2H0zM9 6h2v2H9zM3 8h5v3H3z" fill="#ff9d3c"/><path d="M4 4h3v3H4zM3 6h5v2H3z" fill="#ffe600"/></svg>
+            </div>
+            <div class="boom" style="left: 78%; top: 266px; animation-delay: -3.4s; animation-duration: 6s">
+                <svg width="36" height="36" viewBox="0 0 11 11"><path d="M4 0h3v2H4zM1 2h3v2H1zM7 2h3v2H7zM2 4h7v4H2zM0 6h2v2H0zM9 6h2v2H9zM3 8h5v3H3z" fill="#ff6b3c"/><path d="M4 4h3v3H4zM3 6h5v2H3z" fill="#ffd84a"/></svg>
             </div>
 
-            <p class="subtitle">ESCOLHA O MODO DE JOGO</p>
-
-            <div class="section-label">-- MODO --</div>
-            <div class="mode-row">
-                <button class="btn btn-primary btn-lg" onclick="selectMode('pve')">[ VS BOT ]</button>
-                <button class="btn btn-lg" onclick="selectMode('pvp')" style="background:#1a3a5c;">[ 1 VS 1 ]</button>
-                <button class="btn btn-lg" onclick="selectMode('online')" style="background:#1a6a7c;">[ ONLINE ]</button>
+            <div class="lane" style="top: 278px; opacity: .55; animation: sail-r 60s linear infinite; animation-delay: -12s">
+                <svg width="80" height="30" viewBox="0 0 120 44"><rect x="6" y="32" width="108" height="6" fill="#1a3048"/><rect x="0" y="26" width="120" height="7" fill="#24405c"/><rect x="30" y="16" width="40" height="10" fill="#2c4a68"/><rect x="40" y="8" width="16" height="8" fill="#2c4a68"/><rect x="62" y="10" width="8" height="8" fill="#1a3048"/><rect x="88" y="20" width="12" height="6" fill="#1a3048"/><rect x="100" y="21" width="14" height="2" fill="#1a3048"/></svg>
+            </div>
+            <div class="lane" style="top: 282px; opacity: .5; animation: sail-l 75s linear infinite; animation-delay: -40s">
+                <svg width="70" height="26" viewBox="0 0 120 44" style="transform: scaleX(-1)"><rect x="6" y="32" width="108" height="6" fill="#3a2028"/><rect x="0" y="26" width="120" height="7" fill="#4a2a32"/><rect x="30" y="16" width="40" height="10" fill="#55323a"/><rect x="40" y="8" width="16" height="8" fill="#55323a"/><rect x="62" y="10" width="8" height="8" fill="#3a2028"/><rect x="88" y="20" width="12" height="6" fill="#3a2028"/><rect x="100" y="21" width="14" height="2" fill="#3a2028"/></svg>
             </div>
 
-            <div id="diff-section" style="display:none;">
-                <div class="section-label">-- DIFICULDADE (vs Bot) --</div>
-                <div class="diff-row">
-                    <button class="btn btn-easy btn-sm" onclick="startGame('pve','easy')">FACIL</button>
-                    <button class="btn btn-medium btn-sm" onclick="startGame('pve','medium')">MEDIO</button>
-                    <button class="btn btn-hard btn-sm" onclick="startGame('pve','hard')">DIFICIL</button>
-                    <button class="btn btn-impossible btn-sm"
-                        onclick="startGame('pve','impossible')">IMPOSSIVEL</button>
+            <div class="horizon"></div>
+            <div class="water water-1"></div>
+            <div class="water water-2"></div>
+            <div class="water water-3"></div>
+            <div class="wave-a" style="top: 330px; height: 3px"></div>
+            <div class="wave-b" style="top: 380px; height: 3px"></div>
+            <div class="wave-a" style="top: 470px; height: 4px; animation-duration: 2.8s"></div>
+            <div class="wave-b" style="top: 600px; height: 4px"></div>
+            <div class="wave-a" style="top: 760px; height: 5px; animation-duration: 2.2s"></div>
+            <div class="wave-b" style="bottom: 30px; height: 6px; animation-duration: 3s"></div>
+
+            <span class="splash" style="left: 6%; top: 340px; animation-delay: -.5s"></span>
+            <span class="splash" style="left: 91%; top: 410px; animation-delay: -2.2s; height: 44px"></span>
+            <span class="splash" style="left: 24%; bottom: 120px; animation-delay: -1.4s; height: 56px; width: 10px"></span>
+            <span class="splash" style="left: 70%; bottom: 96px; animation-delay: -3.1s; height: 62px; width: 10px"></span>
+
+            <div class="lane" style="bottom: 70px; animation: sail-r 34s linear infinite; animation-delay: -6s">
+                <div class="bob" style="position: relative">
+                    <span class="puff" style="left: 78px; top: 2px"></span>
+                    <span class="puff" style="left: 78px; top: 2px; animation-delay: -1.2s"></span>
+                    <svg width="240" height="88" viewBox="0 0 120 44"><rect x="6" y="32" width="108" height="6" fill="#445566"/><rect x="0" y="26" width="120" height="7" fill="#556677"/><rect x="2" y="24" width="116" height="2" fill="#7a9aaa"/><rect x="30" y="16" width="40" height="8" fill="#7a9aaa"/><rect x="40" y="8" width="16" height="8" fill="#99bbcc"/><rect x="43" y="10" width="3" height="2" fill="#00e5ff"/><rect x="49" y="10" width="3" height="2" fill="#00e5ff"/><rect x="62" y="8" width="8" height="10" fill="#556677"/><rect x="62" y="8" width="8" height="2" fill="#2a3a48"/><rect x="88" y="18" width="12" height="6" fill="#556677"/><rect x="100" y="19" width="14" height="2" fill="#445566"/><rect x="12" y="18" width="12" height="6" fill="#556677"/><rect x="0" y="19" width="12" height="2" fill="#445566"/><rect class="flash" x="114" y="16" width="6" height="8" fill="#ffd84a"/><rect x="0" y="38" width="120" height="3" fill="#2a3a48"/></svg>
+                </div>
+            </div>
+            <div class="lane" style="bottom: 150px; animation: sail-l 46s linear infinite; animation-delay: -20s">
+                <div class="bob" style="position: relative; animation-delay: -1s">
+                    <span class="puff" style="left: 92px; top: 0; background: #4a3a40"></span>
+                    <span class="puff" style="left: 92px; top: 0; background: #4a3a40; animation-delay: -1.4s"></span>
+                    <svg width="180" height="66" viewBox="0 0 120 44" style="transform: scaleX(-1)"><rect x="6" y="32" width="108" height="6" fill="#4a2a32"/><rect x="0" y="26" width="120" height="7" fill="#6b3a42"/><rect x="2" y="24" width="116" height="2" fill="#8a5058"/><rect x="30" y="16" width="40" height="8" fill="#8a5058"/><rect x="40" y="8" width="16" height="8" fill="#9a6068"/><rect x="43" y="10" width="3" height="2" fill="#ff6b6b"/><rect x="49" y="10" width="3" height="2" fill="#ff6b6b"/><rect x="62" y="8" width="8" height="10" fill="#6b3a42"/><rect x="88" y="18" width="12" height="6" fill="#6b3a42"/><rect x="100" y="19" width="14" height="2" fill="#4a2a32"/><rect class="flash" x="114" y="16" width="6" height="8" fill="#ffd84a" style="animation-delay: -1.6s"/></svg>
+                </div>
+            </div>
+            <div class="lane" style="bottom: 22px; animation: sail-l 26s linear infinite; animation-delay: -4s; opacity: .9">
+                <div class="bob" style="animation-delay: -.5s">
+                    <svg width="120" height="34" viewBox="0 0 60 17"><rect x="2" y="10" width="56" height="4" fill="#2a3a48"/><rect x="0" y="6" width="60" height="5" fill="#3a4a58"/><rect x="20" y="1" width="14" height="6" fill="#3a4a58"/><rect x="26" y="0" width="2" height="2" fill="#556677"/><rect x="30" y="2" width="3" height="2" fill="#00e5ff"/></svg>
+                </div>
+            </div>
+            <div class="seabed"></div>
+        </div>
+
+        <header class="menu-header">
+            <button type="button" class="icon-btn" onclick="toggleRules(true)" aria-label="Como jogar">?</button>
+        </header>
+
+        <section class="menu-body">
+            <div class="menu-title">
+                <p class="menu-kicker">&gt; COMANDO NAVAL_<span class="cursor">█</span></p>
+                <h1>BATALHA<br>NAVAL</h1>
+            </div>
+
+            <div class="mode-grid">
+                <button type="button" class="mode-card" data-mode="pve" onclick="selectMode('pve')" aria-pressed="true">
+                    <span class="mode-card-top"><span class="mode-tag" style="color: var(--cyan)">PvE</span><span class="selected-tag">SELECIONADO</span></span>
+                    <span class="mode-title">VS BOT</span>
+                    <span class="mode-desc">Enfrente a IA de caça e alvo. Quatro níveis de dificuldade.</span>
+                </button>
+                <button type="button" class="mode-card" data-mode="pvp" onclick="selectMode('pvp')" aria-pressed="false">
+                    <span class="mode-card-top"><span class="mode-tag" style="color: var(--orange)">LOCAL</span><span class="selected-tag">SELECIONADO</span></span>
+                    <span class="mode-title">1 VS 1</span>
+                    <span class="mode-desc">Dois jogadores no mesmo aparelho, com tela de troca de turno.</span>
+                </button>
+                <button type="button" class="mode-card" data-mode="online" onclick="selectMode('online')" aria-pressed="false">
+                    <span class="mode-card-top"><span class="mode-tag" style="color: var(--green)">ONLINE</span><span class="selected-tag">SELECIONADO</span></span>
+                    <span class="mode-title">LOBBY</span>
+                    <span class="mode-desc">Crie uma sala, compartilhe o código de 4 letras e jogue à distância.</span>
+                </button>
+            </div>
+
+            <div id="diff-section" class="diff-panel">
+                <h2 class="panel-title">&gt; NÍVEL DO INIMIGO</h2>
+                <div class="diff-grid">
+                    <button type="button" class="diff-card" data-diff="easy" style="--diff: #00ff88" onclick="selectDifficulty('easy')" aria-pressed="false">
+                        <span class="diff-top"><span class="diff-label">FÁCIL</span><span class="pips" data-level="1"></span></span>
+                        <span class="diff-desc">Atira ao acaso pelo tabuleiro.</span>
+                        <span class="diff-acc">Precisão: 50%</span>
+                    </button>
+                    <button type="button" class="diff-card" data-diff="medium" style="--diff: #ffe600" onclick="selectDifficulty('medium')" aria-pressed="true">
+                        <span class="diff-top"><span class="diff-label">MÉDIO</span><span class="pips" data-level="2"></span></span>
+                        <span class="diff-desc">Varre o mar em padrão xadrez.</span>
+                        <span class="diff-acc">Precisão: 75%</span>
+                    </button>
+                    <button type="button" class="diff-card" data-diff="hard" style="--diff: #ff9d3c" onclick="selectDifficulty('hard')" aria-pressed="false">
+                        <span class="diff-top"><span class="diff-label">DIFÍCIL</span><span class="pips" data-level="3"></span></span>
+                        <span class="diff-desc">Xadrez + segue a direção do navio atingido.</span>
+                        <span class="diff-acc">Precisão: 95%</span>
+                    </button>
+                    <button type="button" class="diff-card" data-diff="impossible" style="--diff: #ff4d4d" onclick="selectDifficulty('impossible')" aria-pressed="false">
+                        <span class="diff-top"><span class="diff-label">IMPOSSÍVEL</span><span class="pips" data-level="4"></span></span>
+                        <span class="diff-desc">Mapa de probabilidade em cada tiro.</span>
+                        <span class="diff-acc">Precisão: 100%</span>
+                    </button>
                 </div>
             </div>
 
-            <div class="rules-box pixel-box">
-                <h3>> COMO JOGAR</h3>
-                <ul>
-                    <li>Posicione seus navios no tabuleiro</li>
-                    <li>Tecla [R] para rotacionar o navio</li>
-                    <li>Ataque o tabuleiro inimigo</li>
-                    <li>Afunde todos os navios para vencer</li>
-                    <li>X = acerto | . = erro | # = afundado</li>
-                </ul>
-            </div>
-        </div>
-    </div>
+            <button type="button" id="btn-launch" class="btn-cta btn-launch" onclick="launchMode()">
+                <span id="launch-label">ZARPAR</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+        </section>
+    </main>
 
-    <div id="screen-lobby" class="screen">
-        <div class="lobby-container pixel-box">
-            <h2>> MULTIJOGADOR ONLINE</h2>
-            <div id="lobby-menu">
-                <button class="btn btn-primary btn-lg" onclick="createLobby()">[ CRIAR LOBBY ]</button>
-                <div class="join-lobby-row">
-                    <input id="lobby-code" class="lobby-input" maxlength="4" autocomplete="off"
-                        placeholder="CODIGO" aria-label="Codigo do lobby">
-                    <button class="btn btn-lg" onclick="joinLobby()">[ ENTRAR ]</button>
+    <main id="screen-lobby" class="screen">
+        <header class="top-bar">
+            <button type="button" class="back-link" onclick="leaveLobby()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>MENU
+            </button>
+            <div class="server-status">
+                <span id="server-dot" class="server-dot"></span><span id="server-label">CONECTANDO...</span>
+            </div>
+        </header>
+
+        <section class="lobby-body">
+            <div class="page-heading">
+                <p class="kicker" style="color: var(--green)">MODO ONLINE</p>
+                <h1>LOBBY</h1>
+            </div>
+
+            <div id="lobby-menu" class="lobby-grid fade-in">
+                <div class="panel lobby-card">
+                    <svg width="48" height="48" viewBox="0 0 12 12" aria-hidden="true"><path d="M5 1h2v4h4v2H7v4H5V7H1V5h4z" fill="#00ff88"/></svg>
+                    <h2>CRIAR SALA</h2>
+                    <p>Você recebe um código de 4 letras para mandar ao amigo. Quem cria a sala começa atirando.</p>
+                    <button type="button" class="btn-cta btn-green" onclick="createLobby()">CRIAR SALA</button>
+                </div>
+                <div class="panel lobby-card">
+                    <svg width="48" height="48" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 5h6V2l4 4-4 4V7H1z" fill="#00e5ff"/></svg>
+                    <h2>ENTRAR NA SALA</h2>
+                    <label for="lobby-code">Digite o código que seu amigo enviou</label>
+                    <form id="join-row" class="join-row" onsubmit="joinLobby(event)">
+                        <input id="lobby-code" class="code-input" maxlength="4" autocomplete="off" placeholder="ABCD">
+                        <button type="submit" class="btn-cta btn-cyan">ENTRAR</button>
+                    </form>
+                    <p id="lobby-error" class="lobby-error" role="alert"></p>
                 </div>
             </div>
-            <div id="lobby-waiting" style="display:none;">
-                <p>CODIGO DO LOBBY</p>
-                <strong id="lobby-code-display">----</strong>
-                <p id="lobby-status">Aguardando o adversario...</p>
+
+            <div id="lobby-waiting" class="lobby-room fade-in" style="display:none">
+                <div class="panel room-card">
+                    <span id="room-caption" class="room-caption">CÓDIGO DA SUA SALA</span>
+                    <div id="lobby-code-display" class="code-chars"></div>
+                    <button type="button" id="btn-copy" class="btn-ghost" onclick="copyLobbyCode()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="8" y="8" width="13" height="13"/><path d="M4 16V4h12"/></svg><span id="copy-label">COPIAR CÓDIGO</span>
+                    </button>
+                    <div class="radar" aria-hidden="true">
+                        <span class="ring"></span><span class="ring"></span><span class="ring"></span>
+                        <svg width="44" height="44" viewBox="0 0 11 11"><path id="radar-icon" d="M4 0h3v1h2v2h1v2h1v1h-1v2H9v2H7v1H4v-1H2V8H1V6H0V5h1V3h1V1h2z" fill="#1e4a70"/><path d="M5 2h1v3h3v1H5z" fill="#07111d"/></svg>
+                    </div>
+                    <p id="lobby-status" class="lobby-status" role="status" aria-live="polite">Aguardando adversário<span class="dots"><span>.</span><span>.</span><span>.</span></span></p>
+                </div>
+
+                <div class="crew">
+                    <h2 class="panel-title">&gt; TRIPULAÇÃO</h2>
+                    <div id="crew-slots"></div>
+                    <button type="button" class="btn-ghost btn-danger-ghost" onclick="leaveRoom()">SAIR DA SALA</button>
+                </div>
             </div>
-            <p id="lobby-error" class="lobby-error"></p>
-            <button class="btn btn-danger" onclick="leaveLobby()">[ VOLTAR ]</button>
-        </div>
-    </div>
+        </section>
+    </main>
 
-    <div id="screen-placement" class="screen">
-        <div class="placement-container">
-            <h2 id="placement-title">POSICIONE SEUS NAVIOS</h2>
-            <p class="subtitle" id="placement-subtitle" style="text-align:center;margin:8px 0 16px;">Clique para
-                posicionar | [R] para rotacionar</p>
+    <main id="screen-placement" class="screen">
+        <header class="top-bar">
+            <button type="button" class="back-link" onclick="onExitClick()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>MENU
+            </button>
+            <div class="fleet-progress">
+                <span class="label-muted">FROTA</span>
+                <div id="fleet-progress" class="progress-pips" role="img"></div>
+                <span id="fleet-count" class="label-yellow">0/5</span>
+            </div>
+        </header>
 
-            <div class="placement-layout">
-                <div class="ship-panel pixel-box">
-                    <h3>> NAVIOS</h3>
-                    <div id="ship-list"></div>
-                    <div class="ship-controls">
-                        <button class="btn btn-sm" onclick="rotateShip()">[R] ROTACIONAR</button>
-                        <button class="btn btn-sm btn-danger" onclick="clearBoard()">LIMPAR</button>
-                        <button class="btn btn-sm btn-medium" onclick="randomPlacement()">ALEATORIO</button>
+        <section class="placement-body">
+            <aside class="placement-side">
+                <div>
+                    <h1 id="placement-title" class="placement-title">POSICIONE<br>SUA FROTA</h1>
+                    <p id="placement-subtitle" class="body-muted">Escolha um navio, passe o mouse no mar e clique para ancorar. Navios não podem se encostar.</p>
+                </div>
+                <div id="ship-list" class="dock"></div>
+                <div class="tools">
+                    <button type="button" class="tool" onclick="rotateShip()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg><span id="dir-label">GIRAR · H</span>
+                    </button>
+                    <button type="button" class="tool" onclick="randomPlacement()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>ALEATÓRIO
+                    </button>
+                    <button type="button" class="tool tool-danger" onclick="clearBoard()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>LIMPAR
+                    </button>
+                </div>
+                <button type="button" id="btn-ready" class="btn-cta btn-ready" onclick="playerReady()" disabled>FALTAM 5 NAVIOS</button>
+            </aside>
+
+            <div class="placement-board-wrap">
+                <div class="board-frame">
+                    <div class="col-labels" id="placement-col-labels"></div>
+                    <div class="board-row">
+                        <div class="row-labels" id="placement-row-labels"></div>
+                        <div id="placement-board" class="board board-placement"></div>
                     </div>
                 </div>
+                <p class="hint">Atalho: <kbd>R</kbd> gira o navio · ciano = cabe · vermelho = bloqueado</p>
+            </div>
+        </section>
+    </main>
 
-                <div class="board-wrapper">
-                    <div class="board-with-labels">
-                        <div class="col-labels" id="placement-col-labels"></div>
-                        <div class="board-with-row-labels">
-                            <div class="row-labels" id="placement-row-labels"></div>
-                            <div id="placement-board" class="board"></div>
+    <main id="screen-game" class="screen">
+        <header class="top-bar top-bar-slim">
+            <button type="button" class="back-link" onclick="onExitClick()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>SAIR
+            </button>
+            <span id="game-mode-label" class="label-muted"></span>
+        </header>
+        <header class="game-header">
+            <div class="player-block">
+                <span id="me-avatar" class="avatar avatar-cyan">P1</span>
+                <span class="player-meta">
+                    <span id="p1-name" class="player-name">VOCÊ</span>
+                    <span id="p1-pips" class="fleet-pips" role="img"></span>
+                </span>
+                <span id="say-me" class="say say-me"></span>
+            </div>
+            <div id="turn-badge" class="turn-banner" role="status" aria-live="polite">
+                <span id="banner-title" class="banner-title">SEU TURNO</span>
+                <span id="banner-sub" class="banner-sub">Escolha um alvo no radar</span>
+            </div>
+            <div class="player-block player-block-right">
+                <span id="say-foe" class="say say-foe"></span>
+                <span class="player-meta">
+                    <span id="p2-name" class="player-name">BOT</span>
+                    <span id="p2-pips" class="fleet-pips" role="img"></span>
+                </span>
+                <span id="foe-avatar" class="avatar avatar-red">P2</span>
+            </div>
+        </header>
+
+        <section class="battle">
+            <div class="battle-panel radar-panel">
+                <div class="board-head">
+                    <h2 id="label-enemy" class="board-title title-yellow">&gt; RADAR INIMIGO</h2>
+                    <span id="shot-stats" class="body-small">Tiros 0 · Precisão —</span>
+                </div>
+                <div class="board-frame">
+                    <div class="col-labels" id="game-col-labels-2"></div>
+                    <div class="board-row">
+                        <div class="row-labels" id="game-row-labels-2"></div>
+                        <div id="enemy-board-wrap" class="radar-wrap">
+                            <div id="enemy-board" class="board board-attack"></div>
+                            <div class="sweep-wrap" aria-hidden="true"><div class="sweep"></div></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <button id="btn-ready" class="btn btn-primary btn-lg" onclick="playerReady()" disabled>
-                [ PRONTO! ]
-            </button>
-        </div>
-    </div>
-
-    <div id="screen-game" class="screen">
-        <div class="game-header">
-            <div class="player-info">
-                <span class="player-name" id="p1-name">JOGADOR 1</span>
-                <span class="ship-count" id="p1-ships">NAVIOS: 5</span>
-            </div>
-            <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
-                <div id="turn-badge" class="turn-badge">SEU TURNO</div>
-                <div class="bot-thinking-bar" id="thinking-bar"></div>
-            </div>
-            <div class="player-info" style="text-align:right;">
-                <span class="player-name" id="p2-name">INIMIGO</span>
-                <span class="ship-count" id="p2-ships">NAVIOS: 5</span>
-            </div>
-        </div>
-
-        <div class="game-layout">
-            <div class="board-section">
-                <h3 class="board-label" id="label-player">SEU TABULEIRO</h3>
-                <div class="board-with-labels">
+            <div class="battle-panel own-panel">
+                <div class="board-head">
+                    <h2 id="label-player" class="board-title">SEU MAR</h2>
+                    <span id="own-damage" class="body-small"></span>
+                </div>
+                <div class="board-frame">
                     <div class="col-labels" id="game-col-labels-1"></div>
-                    <div class="board-with-row-labels">
+                    <div class="board-row">
                         <div class="row-labels" id="game-row-labels-1"></div>
-                        <div id="player-board" class="board board-display"></div>
+                        <div id="player-board" class="board board-display" role="img" aria-label="Seu tabuleiro"></div>
                     </div>
                 </div>
             </div>
 
-            <div class="game-log-section">
-                <h3>LOG</h3>
-                <div id="game-log" class="game-log"></div>
+            <div class="battle-panel side-box fleet-panel">
+                <h3 class="side-title">FROTA INIMIGA</h3>
+                <div id="enemy-fleet"></div>
             </div>
 
-            <div class="board-section">
-                <h3 class="board-label" id="label-enemy">TABULEIRO INIMIGO</h3>
-                <div class="board-with-labels">
-                    <div class="col-labels" id="game-col-labels-2"></div>
-                    <div class="board-with-row-labels">
-                        <div class="row-labels" id="game-row-labels-2"></div>
-                        <div id="enemy-board" class="board board-attack"></div>
+            <div class="battle-panel side-box log-panel">
+                <h3 class="side-title">DIÁRIO DE BORDO</h3>
+                <ol id="game-log" class="game-log" aria-live="polite"></ol>
+            </div>
+        </section>
+    </main>
+
+    <main id="screen-victory" class="screen screen-victory">
+        <div id="confetti" class="confetti" aria-hidden="true"></div>
+        <div class="victory-body">
+            <div class="victory-heading">
+                <p id="victory-kicker" class="kicker" style="color: var(--green)">MISSÃO CUMPRIDA</p>
+                <h1 id="victory-title" class="victory-title">VITÓRIA!</h1>
+                <p id="victory-subtitle" class="body-muted">Parabéns!</p>
+            </div>
+            <div class="victory-content">
+                <div id="victory-stats" class="stat-grid"></div>
+                <div class="panel-flat shot-map-box">
+                    <span class="body-small">MAPA DOS TIROS</span>
+                    <div id="shot-map" class="shot-map" role="img" aria-label="Mapa de tiros: vermelho acerto, azul água"></div>
+                    <div class="legend">
+                        <span><i style="background: var(--hit)"></i>acerto</span>
+                        <span><i style="background: var(--miss)"></i>água</span>
+                        <span><i style="background: var(--ship)"></i>não atingido</span>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div id="screen-victory" class="screen">
-        <div class="victory-container">
-            <div class="victory-pixels" id="victory-icon">***</div>
-            <h1 id="victory-title">VITORIA!</h1>
-            <p id="victory-subtitle">Parabens!</p>
-            <div class="victory-stats pixel-box" id="victory-stats"></div>
-            <div class="victory-buttons" style="margin-top:20px;">
-                <button class="btn btn-primary" onclick="playAgain()">[ JOGAR NOVAMENTE ]</button>
-                <button class="btn" onclick="backToMenu()" style="background:#1a3a5c;">[ MENU ]</button>
+            <div class="victory-buttons">
+                <button type="button" id="btn-rematch" class="btn-cta" onclick="playAgain()">REVANCHE</button>
+                <button type="button" class="btn-cta btn-navy" onclick="backToMenu()">MENU</button>
             </div>
         </div>
-    </div>
+    </main>
 
-    <div id="pvp-overlay" class="pvp-overlay" style="display:none">
-        <div class="pvp-overlay-content pixel-box">
-            <h2 id="overlay-title">PASSE O DISPOSITIVO</h2>
-            <p id="overlay-msg">Para o proximo jogador</p>
-            <button class="btn btn-primary btn-lg" onclick="hidePvpOverlay()">[ ESTOU PRONTO ]</button>
-        </div>
-    </div>
-        <button id="btn-exit" class="btn btn-secondary exit-btn" style="display:none" onclick="onExitClick()">Sair</button>
-
-        <div id="exit-overlay" class="pvp-overlay" style="display: none">
-            <div class="pvp-overlay-content">
-                <h2>Tem certeza?</h2>
-                <p>Você perderá o progresso do jogo atual se sair.</p>
-                <div style="display:flex;gap:12px;justify-content:center;margin-top:12px;">
-                    <button class="btn btn-danger" onclick="confirmExit()">Sair</button>
-                    <button class="btn btn-secondary" onclick="hideExitOverlay()">Cancelar</button>
+    <section id="radio" class="radio" aria-label="Rádio da partida" style="display:none">
+        <div class="radio-box">
+            <div class="radio-head">
+                <div class="radio-head-left">
+                    <svg class="signal" width="18" height="14" viewBox="0 0 9 7" aria-hidden="true"><path d="M0 5h2v2H0zM3 3h2v4H3zM6 0h2v7H6z" fill="#00ff88"/></svg>
+                    <h2>RÁDIO</h2>
+                    <span id="radio-channel" class="body-small"></span>
+                </div>
+                <div class="radio-head-right">
+                    <button type="button" id="radio-mute" class="radio-btn" onclick="toggleRadioMute()" aria-pressed="false">Silenciar</button>
+                    <button type="button" id="radio-toggle" class="radio-btn radio-chevron" onclick="toggleRadioOpen()" aria-expanded="true" aria-label="Minimizar rádio">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
                 </div>
             </div>
-        </div>
-    <div id="chat-widget" class="chat-widget" style="display:none">
-        <button id="chat-toggle" class="btn btn-sm chat-toggle" onclick="toggleChat()">
-            CHAT <span id="chat-unread" class="chat-unread" style="display:none">0</span>
-        </button>
-        <div id="chat-panel" class="chat-panel pixel-box" style="display:none">
-            <div class="chat-header">
-                <h3>> CHAT</h3>
-                <button class="chat-close" onclick="toggleChat()" aria-label="Fechar chat">X</button>
+            <div id="radio-open" class="radio-open">
+                <ol id="chat-messages" class="radio-messages" aria-live="polite"></ol>
+                <div class="radio-compose">
+                    <div class="quick" role="group" aria-label="Reações rápidas">
+                        <button type="button" class="quick-btn" onclick="sendQuick('GG')">GG</button>
+                        <button type="button" class="quick-btn" onclick="sendQuick('BOA!')">BOA!</button>
+                        <button type="button" class="quick-btn" onclick="sendQuick('OPS')">OPS</button>
+                        <button type="button" class="quick-btn" onclick="sendQuick('JÁ ERA')">JÁ ERA</button>
+                        <button type="button" class="quick-btn" onclick="sendQuick('QUASE!')">QUASE!</button>
+                        <button type="button" class="quick-btn" onclick="sendQuick('SORTE')">SORTE</button>
+                    </div>
+                    <form class="radio-form" onsubmit="sendChatMessage(event)">
+                        <label for="chat-input" class="sr-only">Mensagem</label>
+                        <input id="chat-input" class="radio-input" maxlength="200" autocomplete="off" placeholder="Transmitir mensagem…">
+                        <button type="submit" class="radio-send">ENVIAR</button>
+                    </form>
+                </div>
             </div>
-            <div id="chat-messages" class="chat-messages" aria-live="polite"></div>
-            <form class="chat-form" onsubmit="sendChatMessage(event)">
-                <input id="chat-input" class="chat-input" maxlength="200" autocomplete="off"
-                    placeholder="Mensagem..." aria-label="Mensagem do chat">
-                <button type="submit" class="btn btn-sm btn-primary">ENVIAR</button>
-            </form>
+            <p id="radio-last" class="radio-last" style="display:none"></p>
+        </div>
+    </section>
+
+    <div id="pvp-overlay" class="swap-screen" style="display:none">
+        <div class="swap-arrow" aria-hidden="true">
+            <span id="swap-from" class="avatar avatar-lg avatar-cyan dim">P1</span>
+            <svg class="slide" width="80" height="40" viewBox="0 0 16 8"><path d="M0 2h12V0l4 4-4 4V6H0z" fill="#ffe600"/></svg>
+            <span id="swap-to" class="avatar avatar-lg avatar-orange">P2</span>
+        </div>
+        <div class="swap-heading">
+            <p class="kicker" style="color: var(--orange)">1 VS 1</p>
+            <h1 id="overlay-title">PASSE O APARELHO<br>PARA O <span class="swap-target">JOGADOR 2</span></h1>
+            <p id="overlay-msg" class="body-muted"></p>
+        </div>
+        <div id="swap-events-box" class="panel-flat swap-events">
+            <h2 class="side-title">ENQUANTO VOCÊ ESTAVA FORA</h2>
+            <ul id="swap-events"></ul>
+        </div>
+        <div class="hold-wrap">
+            <button type="button" id="hold-btn" class="hold-btn">
+                <span id="hold-fill" class="hold-fill" aria-hidden="true"></span>
+                <span id="hold-label" class="hold-label">SEGURE PARA REVELAR</span>
+            </button>
+            <span class="body-small">Segurar evita revelar o tabuleiro sem querer</span>
+        </div>
+    </div>
+
+    <div id="exit-overlay" class="modal" style="display:none">
+        <div class="panel modal-box" role="dialog" aria-modal="true" aria-labelledby="exit-title">
+            <h2 id="exit-title">TEM CERTEZA?</h2>
+            <p class="body-muted">Você perderá o progresso da partida atual se sair.</p>
+            <div class="modal-actions">
+                <button type="button" class="btn-cta btn-red" onclick="confirmExit()">SAIR</button>
+                <button type="button" class="btn-cta btn-navy" onclick="hideExitOverlay()">CANCELAR</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="rules-overlay" class="modal" style="display:none" onclick="if (event.target === this) toggleRules(false)">
+        <div class="panel modal-box" role="dialog" aria-modal="true" aria-labelledby="rules-title">
+            <h2 id="rules-title">&gt; COMO JOGAR</h2>
+            <ul class="rules-list">
+                <li>Posicione seus 5 navios no tabuleiro. Eles não podem se encostar.</li>
+                <li>Tecla <kbd>R</kbd> gira o navio.</li>
+                <li>Clique no radar inimigo para atirar.</li>
+                <li>Acertou? Atire de novo. Errou? A vez passa.</li>
+                <li>Afunde todos os navios inimigos para vencer.</li>
+            </ul>
+            <div class="modal-actions">
+                <button type="button" class="btn-cta" onclick="toggleRules(false)">ENTENDI</button>
+            </div>
         </div>
     </div>
 
