@@ -6,6 +6,7 @@ const { Server } = require("socket.io");
 
 const app = express();
 const server = http.createServer(app);
+
 const io = new Server(server);
 
 const publicDir = path.join(__dirname, "public");
@@ -53,6 +54,28 @@ function opponentNumber(playerNumber) {
     return playerNumber === 1 ? 2 : 1;
 }
 
+function shipsLeft(room) {
+    const count = n => (room.ships[n] || []).filter(ship => ship && !ship.sunk).length;
+    return { 1: count(1), 2: count(2) };
+}
+
+function closeRoom(lobbyCode, leavingSocket) {
+    const room = rooms.get(lobbyCode);
+    leavingSocket.leave(lobbyCode);
+    leavingSocket.data.roomCode = null;
+    if (!room) return;
+    const leftPlayer = room.players[leavingSocket.id];
+    for (const socketId of Object.keys(room.players)) {
+        if (socketId === leavingSocket.id) continue;
+        const other = io.sockets.sockets.get(socketId);
+        if (!other) continue;
+        other.emit("opponent-disconnected", { playerNumber: leftPlayer });
+        other.leave(lobbyCode);
+        other.data.roomCode = null;
+    }
+    rooms.delete(lobbyCode);
+}
+
 io.on("connection", (socket) => {
     socket.on("create-lobby", () => {
         if (socket.data.roomCode) return;
@@ -95,6 +118,7 @@ io.on("connection", (socket) => {
         if (!room) return;
         const playerNumber = room.players[socket.id];
         if (!playerNumber) return;
+        if (room.inGame || room.ready[playerNumber]) return;
         if (!isValidBoard(board) || !Array.isArray(ships)) return;
 
         room.boards[playerNumber] = board;
@@ -154,6 +178,14 @@ io.on("connection", (socket) => {
 
         const sunkCount = ships.filter(ship => ship && ship.sunk).length;
         const gameOver = ships.length > 0 && sunkCount === ships.length;
+
+        if (gameOver) {
+            room.inGame = false;
+            room.turn = null;
+        } else if (result === "miss") {
+            room.turn = target;
+        }
+
         io.to(lobbyCode).emit("attack-result", {
             attacker: playerNumber,
             target,
@@ -162,39 +194,25 @@ io.on("connection", (socket) => {
             result,
             sunkShip,
             gameOver,
+            turn: room.turn,
+            shipsLeft: shipsLeft(room),
         });
 
         if (gameOver) {
             io.to(lobbyCode).emit("game-over", { winner: playerNumber });
-            room.inGame = false;
         } else if (result === "miss") {
-            room.turn = target;
             io.to(lobbyCode).emit("turn-changed", { turn: room.turn });
         }
     });
 
     socket.on("leave-lobby", () => {
         const lobbyCode = socket.data.roomCode;
-        const room = lobbyCode ? rooms.get(lobbyCode) : null;
-        if (!room) return;
-        const leftPlayer = room.players[socket.id];
-        delete room.players[socket.id];
-        socket.leave(lobbyCode);
-        socket.data.roomCode = null;
-        io.to(lobbyCode).emit("opponent-disconnected", { playerNumber: leftPlayer });
-        if (Object.keys(room.players).length === 0) rooms.delete(lobbyCode);
+        if (lobbyCode) closeRoom(lobbyCode, socket);
     });
 
     socket.on("disconnect", () => {
         const lobbyCode = socket.data.roomCode;
-        const room = lobbyCode ? rooms.get(lobbyCode) : null;
-        if (!room) return;
-        const disconnectedPlayer = room.players[socket.id];
-        delete room.players[socket.id];
-        io.to(lobbyCode).emit("opponent-disconnected", {
-            playerNumber: disconnectedPlayer,
-        });
-        if (Object.keys(room.players).length === 0) rooms.delete(lobbyCode);
+        if (lobbyCode) closeRoom(lobbyCode, socket);
     });
 });
 

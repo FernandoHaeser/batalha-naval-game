@@ -354,7 +354,7 @@ function resetState() {
         remaining: { 1: [...SHIP_TYPES], 2: [...SHIP_TYPES] },
         stats: { shots: 0, hits: 0, start: null },
         ai: { mode: 'hunt', lastHit: null, targetQueue: [], dirQueue: [], hitDir: null, firstHit: null, attacked: new Set() },
-        online: { socket: state.online.socket, playerNumber: state.online.playerNumber, lobbyCode: state.online.lobbyCode },
+        online: { socket: state.online.socket, playerNumber: null, lobbyCode: null, shipsLeft: null },
     };
 }
 
@@ -577,6 +577,8 @@ function updateReadyButton(playerNum) {
 function playerReady() {
     if (state.mode === 'online') {
         const socket = getOnlineSocket();
+        document.getElementById('btn-ready').disabled = true;
+        document.getElementById('placement-subtitle').textContent = 'Aguardando adversario...';
         if (socket) socket.emit('player-ready', {
             board: state.boards[state.online.playerNumber],
             ships: state.ships[state.online.playerNumber],
@@ -838,7 +840,9 @@ function updateShipCounts() {
         : 1;
     const enemy = own === 1 ? 2 : 1;
     const s1 = state.ships[own].filter(s => !s.sunk).length;
-    const s2 = state.ships[enemy].filter(s => !s.sunk).length;
+    const s2 = state.mode === 'online'
+        ? (state.online.shipsLeft ? state.online.shipsLeft[enemy] : SHIP_TYPES.length)
+        : state.ships[enemy].filter(s => !s.sunk).length;
     document.getElementById('p1-ships').textContent = `NAVIOS: ${s1}`;
     document.getElementById('p2-ships').textContent = `NAVIOS: ${s2}`;
 }
@@ -994,7 +998,7 @@ function setupOnlineListeners(socket) {
         renderGameScreen();
     });
 
-    socket.on('attack-result', ({ attacker, target, row, col, result, sunkShip }) => {
+    socket.on('attack-result', ({ attacker, target, row, col, result, sunkShip, turn, shipsLeft }) => {
         const board = state.boards[target];
         const ships = state.ships[target];
         board[row][col] = result === 'hit' ? CELL.HIT : CELL.MISS;
@@ -1022,13 +1026,23 @@ function setupOnlineListeners(socket) {
             addLog(result === 'miss' ? `INIMIGO ERROU ${label}` : `INIMIGO ACERTOU ${label}`,
                 result === 'miss' ? 'miss' : 'hit');
         }
+        if (sunkShip) {
+            addLog(attacker === state.online.playerNumber
+                ? `VOCE AFUNDOU: ${sunkShip.name || 'NAVIO'}!`
+                : `INIMIGO AFUNDOU: ${sunkShip.name || 'NAVIO'}!`, 'sunk');
+        }
+        if (shipsLeft) state.online.shipsLeft = shipsLeft;
+        if (turn) state.currentTurn = turn;
+        updateTurnUI();
         renderGameBoards();
         updateShipCounts();
     });
 
     socket.on('turn-changed', ({ turn }) => {
+        if (!turn || turn === state.currentTurn) return;
         state.currentTurn = turn;
         updateTurnUI();
+        renderGameBoards();
     });
 
     socket.on('game-over', ({ winner }) => {
@@ -1036,8 +1050,13 @@ function setupOnlineListeners(socket) {
     });
 
     socket.on('opponent-disconnected', () => {
-        if (state.phase === 'game') {
-            state.phase = 'menu';
+        state.online.lobbyCode = null;
+        state.online.playerNumber = null;
+        state.online.shipsLeft = null;
+        if (state.mode === 'online' && state.phase !== 'victory') {
+            const keepMode = state.mode;
+            resetState();
+            state.mode = keepMode;
             document.getElementById('lobby-error').textContent =
                 'O adversario saiu do lobby.';
             showScreen('lobby');
