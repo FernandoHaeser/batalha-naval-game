@@ -271,6 +271,7 @@ function endGame(winnerNum) {
     const outcome = currentMode().result(winnerNum);
     const { won } = outcome;
 
+    byId('screen-victory').classList.toggle('is-lose', !won);
     const kicker = byId('victory-kicker');
     kicker.textContent = won ? 'MISSÃO CUMPRIDA' : 'MISSÃO FRACASSADA';
     kicker.className = `kicker ${won ? 'kicker-green' : 'kicker-red'}`;
@@ -280,26 +281,30 @@ function endGame(winnerNum) {
     byId('victory-subtitle').textContent = outcome.subtitle;
 
     const s = state.stats[outcome.subject];
-    const acc = s.shots ? Math.round((s.hits / s.shots) * 100) : 0;
+    const acc = accuracy(s);
     const bar = el('span', 'stat-bar');
     const fill = el('i');
     fill.style.width = `${acc}%`;
     bar.appendChild(fill);
     const precision = statCard('PRECISÃO', `${acc}%`, bar);
     precision.value.classList.add('value-cyan');
-    byId('victory-stats').replaceChildren(
+    const cards = [
         precision.card,
         statCard('TIROS', String(s.shots), `${s.hits} acertos · ${s.shots - s.hits} na água`).card,
         statCard('TEMPO', formatTime(elapsed)).card,
         statCard('MAIOR COMBO', `x${s.bestStreak}`, 'acertos seguidos', 'stat-gold').card,
-    );
+    ];
+    cards.forEach((card, k) => card.style.setProperty('--i', String(k)));
+    byId('victory-stats').replaceChildren(...cards);
 
-    byId('shot-map').replaceChildren(...outcome.mapBoard.flat().map(val => {
-        if (val === CELL.HIT || val === CELL.SUNK) return el('span', 'hit');
-        if (val === CELL.MISS) return el('span', 'miss');
-        if (val === CELL.SHIP && outcome.revealShips) return el('span', 'ship');
-        return el('span');
-    }));
+    renderDuel(outcome.duel);
+    byId('shot-map-title').textContent = outcome.mapTitle || 'MAPA DOS TIROS';
+    renderShotMap('shot-map', outcome.mapBoard, outcome.revealShips);
+    byId('own-map-box').hidden = !outcome.ownBoard;
+    if (outcome.ownBoard) {
+        byId('own-map-title').textContent = outcome.ownTitle || 'SEU MAR';
+        renderShotMap('own-map', outcome.ownBoard, true);
+    }
 
     renderConfetti(won);
     byId('btn-rematch').hidden = !currentMode().rematch;
@@ -352,14 +357,83 @@ function skipFinale() {
     if (finaleFinish) finaleFinish();
 }
 
-function renderConfetti(active) {
+function renderShotMap(id, board, revealShips) {
+    byId(id).replaceChildren(...board.flat().map(val => {
+        if (val === CELL.HIT || val === CELL.SUNK) return el('span', 'hit');
+        if (val === CELL.MISS) return el('span', 'miss');
+        if (val === CELL.SHIP && revealShips) return el('span', 'ship');
+        return el('span');
+    }));
+}
+
+function renderDuel(duel) {
+    const box = byId('victory-duel');
+    box.hidden = !duel;
+    if (!duel) return;
+    const sides = { a: duel.a, b: duel.b };
+    for (const [key, n] of Object.entries(sides)) {
+        const avatar = byId(`duel-${key}-avatar`);
+        avatar.className = `avatar avatar-${playerColor(n)}`;
+        avatar.textContent = `P${n}`;
+        byId(`duel-${key}-name`).textContent = key === 'a' ? duel.aName : duel.bName;
+        const tag = byId(`duel-${key}-tag`);
+        tag.textContent = n === duel.winner ? 'VENCEU' : 'AFUNDADO';
+        tag.className = `duel-tag ${n === duel.winner ? 'duel-tag-win' : 'duel-tag-lose'}`;
+    }
+
+    const sa = state.stats[duel.a];
+    const sb = state.stats[duel.b];
+    const rows = [
+        { label: 'NAVIOS RESTANTES', a: duel.shipsLeft[duel.a], b: duel.shipsLeft[duel.b] },
+        { label: 'ACERTOS', a: sa.hits, b: sb.hits },
+        { label: 'PRECISÃO', a: accuracy(sa), b: accuracy(sb), suffix: '%' },
+        { label: 'MAIOR COMBO', a: sa.bestStreak, b: sb.bestStreak, prefix: 'x' },
+        { label: 'TIROS', a: sa.shots, b: sb.shots, neutral: true },
+    ];
+    byId('duel-rows').replaceChildren(...rows.map((row, k) => {
+        const line = el('div', 'duel-row');
+        line.style.setProperty('--i', String(k));
+        const format = v => `${row.prefix || ''}${v}${row.suffix || ''}`;
+        const valA = el('span', 'duel-val duel-val-a', format(row.a));
+        const valB = el('span', 'duel-val duel-val-b', format(row.b));
+        if (!row.neutral && row.a !== row.b) (row.a > row.b ? valA : valB).classList.add('best');
+        const middle = el('span', 'duel-mid');
+        const meter = el('span', 'duel-meter');
+        const total = row.a + row.b;
+        const fillA = el('i', `fill-${playerColor(duel.a)}`);
+        const fillB = el('i', `fill-${playerColor(duel.b)}`);
+        fillA.style.flexGrow = String(total ? row.a : 1);
+        fillB.style.flexGrow = String(total ? row.b : 1);
+        meter.append(fillA, fillB);
+        middle.append(el('span', 'duel-label', row.label), meter);
+        line.append(valA, middle, valB);
+        return line;
+    }));
+}
+
+function renderConfetti(won) {
+    const box = byId('confetti');
+    box.classList.toggle('bubbles', !won);
+    if (!won) {
+        box.replaceChildren(...Array.from({ length: 18 }, (_, k) => {
+            const bubble = el('span');
+            const size = 6 + (k % 4) * 3;
+            bubble.style.left = `${(k * 37 + 7) % 100}%`;
+            bubble.style.width = `${size}px`;
+            bubble.style.height = `${size}px`;
+            bubble.style.animationDuration = `${6 + (k % 5)}s`;
+            bubble.style.animationDelay = `-${((k * 0.9) % 6).toFixed(1)}s`;
+            return bubble;
+        }));
+        return;
+    }
     const colors = ['#ffe600', '#00e5ff', '#ff6b6b', '#00ff88', '#ff9d3c'];
-    byId('confetti').replaceChildren(...(active ? Array.from({ length: 24 }, (_, k) => {
+    box.replaceChildren(...Array.from({ length: 32 }, (_, k) => {
         const piece = el('span');
         piece.style.left = `${(k * 41) % 100}%`;
         piece.style.background = colors[k % 5];
         piece.style.animationDuration = `${4 + (k % 5)}s`;
         piece.style.animationDelay = `-${((k * 0.7) % 5).toFixed(1)}s`;
         return piece;
-    }) : []));
+    }));
 }

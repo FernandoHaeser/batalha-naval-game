@@ -195,7 +195,10 @@ defineMode('pve', {
             won,
             subject: 1,
             mapBoard: state.boards[2],
+            mapTitle: 'SEUS TIROS',
             revealShips: true,
+            ownBoard: state.boards[1],
+            ownTitle: 'TIROS DO BOT',
             subtitle: won
                 ? `Você afundou a frota do bot no nível ${level}.`
                 : `O bot (${level}) afundou toda a sua frota.`,

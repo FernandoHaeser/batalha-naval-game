@@ -2290,6 +2290,254 @@ kbd {
   height: 10px;
 }
 
+.screen-victory {
+  background: radial-gradient(ellipse at 50% 0%, #0f2a45 0%, var(--bg) 60%);
+}
+
+.screen-victory.is-lose {
+  background: radial-gradient(ellipse at 50% 0%, #2a1018 0%, var(--bg) 60%);
+}
+
+.victory-emblem {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.victory-emblem svg {
+  position: relative;
+  filter: drop-shadow(4px 4px 0 #000);
+}
+
+.emblem-rays {
+  position: absolute;
+  inset: -20px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(rgba(255, 230, 0, .22) 0 12deg, transparent 12deg 30deg);
+  -webkit-mask: radial-gradient(circle, #000 30%, transparent 70%);
+  mask: radial-gradient(circle, #000 30%, transparent 70%);
+  animation: rays 14s linear infinite;
+}
+
+@keyframes rays {
+  to { transform: rotate(360deg); }
+}
+
+.emblem-lose { display: none; }
+.is-lose .emblem-win { display: none; }
+.is-lose .emblem-lose { display: block; }
+
+.is-lose .emblem-rays {
+  background: radial-gradient(circle, rgba(255, 107, 107, .25), transparent 65%);
+  animation: none;
+}
+
+.screen-victory.active .victory-emblem {
+  animation: emblem-in .6s cubic-bezier(.2, 1.5, .4, 1) both;
+}
+
+.screen-victory.active.is-lose .victory-emblem svg {
+  animation: emblem-sway 3s ease-in-out .6s infinite;
+}
+
+@keyframes emblem-in {
+  0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+  100% { transform: none; opacity: 1; }
+}
+
+@keyframes emblem-sway {
+  0%, 100% { transform: rotate(-6deg) translateY(0); }
+  50% { transform: rotate(6deg) translateY(4px); }
+}
+
+.screen-victory.active .victory-title {
+  animation: finale-stamp .45s cubic-bezier(.2, 1.6, .4, 1) .2s both, glow 2s ease-in-out .7s infinite;
+}
+
+.screen-victory.active .victory-title.lose {
+  animation: finale-stamp .45s cubic-bezier(.2, 1.6, .4, 1) .2s both;
+}
+
+.screen-victory.active .victory-heading .kicker,
+.screen-victory.active .victory-heading .body-muted {
+  animation: fade-in .4s ease-out .4s both;
+}
+
+.screen-victory.active .duel {
+  animation: fade-in .4s ease-out .55s both;
+}
+
+.screen-victory.active .stat,
+.screen-victory.active .duel-row {
+  animation: fade-in .35s ease-out both;
+  animation-delay: calc(.7s + var(--i, 0) * 90ms);
+}
+
+.screen-victory.active .victory-maps {
+  animation: fade-in .4s ease-out 1s both;
+}
+
+.screen-victory.active .victory-buttons {
+  animation: fade-in .4s ease-out 1.1s both;
+}
+
+.confetti.bubbles span {
+  top: auto;
+  bottom: -20px;
+  background: transparent;
+  border: 2px solid rgba(127, 191, 220, .45);
+  animation-name: rise;
+}
+
+@keyframes rise {
+  0% { transform: translateY(0); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translateY(-110vh); opacity: 0; }
+}
+
+.duel {
+  width: 100%;
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+}
+
+.duel-head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.duel-side {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.duel-side-right {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.duel-who {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.duel-side-right .duel-who {
+  align-items: flex-end;
+}
+
+.duel-name {
+  font-family: var(--pixel);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.duel-tag {
+  align-self: flex-start;
+  padding: 3px 6px;
+  font-family: var(--pixel);
+  font-size: 8px;
+  border: 2px solid #000;
+}
+
+.duel-side-right .duel-tag {
+  align-self: flex-end;
+}
+
+.duel-tag-win { background: var(--green); color: var(--bg); }
+.duel-tag-lose { background: var(--pip-dead); color: var(--red-soft); border-color: #5c2020; }
+
+.duel-vs {
+  font-family: var(--pixel);
+  font-size: 14px;
+  color: var(--yellow);
+  text-shadow: 2px 2px 0 #000;
+}
+
+.duel-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.duel-row {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 64px;
+  align-items: center;
+  gap: 12px;
+}
+
+.duel-val {
+  font-family: var(--pixel);
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.duel-val-a { text-align: left; }
+.duel-val-b { text-align: right; }
+
+.duel-val.best {
+  color: var(--yellow);
+}
+
+.duel-mid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.duel-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+
+.duel-meter {
+  display: flex;
+  gap: 2px;
+  width: 100%;
+  height: 6px;
+}
+
+.duel-meter i {
+  flex-basis: 0;
+  min-width: 2px;
+}
+
+.fill-cyan { background: var(--cyan); }
+.fill-orange { background: var(--orange); }
+.fill-red { background: var(--red); }
+
+.victory-maps {
+  flex: 1 1 420px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  align-content: start;
+}
+
+.victory-maps .shot-map-box {
+  flex: none;
+  padding: 14px;
+}
+
+.victory-maps .legend {
+  grid-column: 1 / -1;
+}
+
 .victory-buttons {
   display: flex;
   flex-wrap: wrap;

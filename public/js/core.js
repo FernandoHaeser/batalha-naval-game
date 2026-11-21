@@ -179,18 +179,27 @@ function playerColor(n) {
     return currentMode().color(n);
 }
 
-function recordShot(player, result) {
+function recordStats(player, result) {
     const s = state.stats[player];
     s.shots++;
     if (result === 'miss') {
         s.streak = 0;
-        state.banner = { last: null, streak: 0 };
         return;
     }
     s.hits++;
     s.streak++;
     s.bestStreak = Math.max(s.bestStreak, s.streak);
-    state.banner = { last: result, streak: state.banner.streak + 1 };
+}
+
+function recordShot(player, result) {
+    recordStats(player, result);
+    state.banner = result === 'miss'
+        ? { last: null, streak: 0 }
+        : { last: result, streak: state.banner.streak + 1 };
+}
+
+function accuracy(stats) {
+    return stats.shots ? Math.round((stats.hits / stats.shots) * 100) : 0;
 }
 
 function el(tag, className, text) {

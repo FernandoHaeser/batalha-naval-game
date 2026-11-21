@@ -337,15 +337,46 @@
         <div id="confetti" class="confetti" aria-hidden="true"></div>
         <div class="victory-body">
             <div class="victory-heading">
+                <div class="victory-emblem" aria-hidden="true">
+                    <span class="emblem-rays"></span>
+                    <svg class="emblem-win" width="96" height="96" viewBox="0 0 16 16"><rect x="1" y="2" width="3" height="1" fill="#d9a400"/><rect x="1" y="3" width="1" height="3" fill="#d9a400"/><rect x="2" y="5" width="2" height="1" fill="#d9a400"/><rect x="12" y="2" width="3" height="1" fill="#d9a400"/><rect x="14" y="3" width="1" height="3" fill="#d9a400"/><rect x="12" y="5" width="2" height="1" fill="#d9a400"/><rect x="3" y="1" width="10" height="1" fill="#fff4a0"/><rect x="4" y="2" width="8" height="5" fill="#ffe600"/><rect x="10" y="2" width="2" height="5" fill="#d9a400"/><rect x="5" y="7" width="6" height="1" fill="#d9a400"/><rect x="6" y="8" width="4" height="1" fill="#d9a400"/><rect x="7" y="9" width="2" height="2" fill="#b08000"/><rect x="5" y="11" width="6" height="1" fill="#d9a400"/><rect x="4" y="12" width="8" height="2" fill="#8a5a00"/><rect x="6" y="3" width="1" height="2" fill="#fffbe0"/></svg>
+                    <svg class="emblem-lose" width="96" height="96" viewBox="0 0 16 16"><rect x="7" y="0" width="2" height="1" fill="#ff8a8a"/><rect x="6" y="1" width="1" height="2" fill="#ff8a8a"/><rect x="9" y="1" width="1" height="2" fill="#ff8a8a"/><rect x="7" y="3" width="2" height="1" fill="#ff8a8a"/><rect x="4" y="5" width="8" height="1" fill="#ff6b6b"/><rect x="7" y="4" width="2" height="9" fill="#ff6b6b"/><rect x="1" y="10" width="3" height="1" fill="#ff6b6b"/><rect x="12" y="10" width="3" height="1" fill="#ff6b6b"/><rect x="2" y="11" width="1" height="1" fill="#d94a4a"/><rect x="13" y="11" width="1" height="1" fill="#d94a4a"/><rect x="3" y="12" width="1" height="1" fill="#d94a4a"/><rect x="12" y="12" width="1" height="1" fill="#d94a4a"/><rect x="4" y="13" width="8" height="1" fill="#d94a4a"/></svg>
+                </div>
                 <p id="victory-kicker" class="kicker kicker-green">MISSÃO CUMPRIDA</p>
                 <h1 id="victory-title" class="victory-title">VITÓRIA!</h1>
                 <p id="victory-subtitle" class="body-muted"></p>
             </div>
+            <div id="victory-duel" class="panel duel" hidden>
+                <div class="duel-head">
+                    <span class="duel-side">
+                        <span id="duel-a-avatar" class="avatar avatar-cyan">P1</span>
+                        <span class="duel-who">
+                            <span id="duel-a-name" class="duel-name"></span>
+                            <span id="duel-a-tag" class="duel-tag"></span>
+                        </span>
+                    </span>
+                    <span class="duel-vs">VS</span>
+                    <span class="duel-side duel-side-right">
+                        <span class="duel-who">
+                            <span id="duel-b-name" class="duel-name"></span>
+                            <span id="duel-b-tag" class="duel-tag"></span>
+                        </span>
+                        <span id="duel-b-avatar" class="avatar avatar-orange">P2</span>
+                    </span>
+                </div>
+                <div id="duel-rows" class="duel-rows"></div>
+            </div>
             <div class="victory-content">
                 <div id="victory-stats" class="stat-grid"></div>
-                <div class="panel-flat shot-map-box">
-                    <span class="body-small">MAPA DOS TIROS</span>
-                    <div id="shot-map" class="shot-map" role="img" aria-label="Mapa de tiros: vermelho acerto, azul água"></div>
+                <div class="victory-maps">
+                    <div class="panel-flat shot-map-box">
+                        <span id="shot-map-title" class="body-small">MAPA DOS TIROS</span>
+                        <div id="shot-map" class="shot-map" role="img" aria-label="Mapa de tiros: vermelho acerto, azul água"></div>
+                    </div>
+                    <div id="own-map-box" class="panel-flat shot-map-box" hidden>
+                        <span id="own-map-title" class="body-small">SEU MAR</span>
+                        <div id="own-map" class="shot-map" role="img" aria-label="Seu mar: vermelho acerto recebido, azul água, cinza navio intacto"></div>
+                    </div>
                     <div class="legend">
                         <span><i class="legend-hit"></i>acerto</span>
                         <span><i class="legend-miss"></i>água</span>

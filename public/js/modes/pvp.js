@@ -131,7 +131,21 @@ defineMode('pvp', {
             title: `JOGADOR ${winner} VENCEU!`,
             subject: winner,
             mapBoard: state.boards[loser],
+            mapTitle: `TIROS DO JOGADOR ${winner}`,
             revealShips: true,
+            ownBoard: state.boards[winner],
+            ownTitle: `TIROS DO JOGADOR ${loser}`,
+            duel: {
+                a: winner,
+                b: loser,
+                aName: `JOGADOR ${winner}`,
+                bName: `JOGADOR ${loser}`,
+                winner,
+                shipsLeft: {
+                    [winner]: state.ships[winner].filter(s => !s.sunk).length,
+                    [loser]: 0,
+                },
+            },
             subtitle: `O Jogador ${winner} afundou a frota do Jogador ${loser}.`,
         };
     },

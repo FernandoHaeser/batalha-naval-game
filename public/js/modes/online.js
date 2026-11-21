@@ -310,6 +310,7 @@ function applyAttackResult({ attacker, target, row, col, result, sunkShip, turn,
         }
     } else {
         state.lastOwnCell = [row, col];
+        recordStats(attacker, sunkShip ? 'sunk' : result);
         if (sunkShip) {
             addLog('RIVAL', `Afundou seu ${shipName}!`, 'bad');
             radioSystem(`O adversário afundou seu ${shipName}`, 'bad');
@@ -466,13 +467,29 @@ defineMode('online', {
 
     result(winner) {
         const me = state.online.playerNumber;
+        const foe = otherPlayer(me);
         const won = winner === me;
+        const left = state.online.shipsLeft;
         return {
             won,
             subject: me,
-            mapBoard: state.boards[otherPlayer(me)],
+            mapBoard: state.boards[foe],
+            mapTitle: 'SEUS TIROS',
             revealShips: false,
+            ownBoard: state.boards[me],
+            ownTitle: 'TIROS DO ADVERSÁRIO',
             subtitle: won ? 'Você afundou a frota do adversário.' : 'O adversário afundou toda a sua frota.',
+            duel: {
+                a: me,
+                b: foe,
+                aName: 'VOCÊ',
+                bName: 'ADVERSÁRIO',
+                winner,
+                shipsLeft: {
+                    [me]: left ? left[me] : state.ships[me].filter(s => !s.sunk).length,
+                    [foe]: left ? left[foe] : 0,
+                },
+            },
         };
     },
 });
