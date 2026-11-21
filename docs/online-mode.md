@@ -48,6 +48,29 @@ Agora:
 
 O cliente não conhece os navios do oponente (só o servidor conhece). O contador "NAVIOS" do adversário usa o `shipsLeft` enviado pelo servidor.
 
+## Chat entre jogadores
+
+Os dois jogadores da sala podem trocar mensagens durante o posicionamento, a partida e na tela de vitória/derrota.
+
+```js
+cliente → servidor: chat-message { text }
+servidor → sala:    chat-message { playerNumber, text, at }
+```
+
+Regras aplicadas pelo servidor:
+
+- só aceita mensagens de quem está em uma sala;
+- remove caracteres de controle, apara espaços e corta em **200** caracteres; texto vazio é descartado;
+- limita cada jogador a **uma mensagem a cada 400 ms** (o excedente é descartado em silêncio).
+
+No cliente:
+
+- o botão **CHAT** fica no canto inferior direito e só aparece no modo online com uma sala ativa;
+- mensagens do adversário recebidas com o painel fechado aparecem como contador no botão;
+- as mensagens são inseridas com `textContent`, nunca como HTML;
+- o histórico é limpo ao entrar em um novo lobby ou quando o adversário sai;
+- com o campo de mensagem focado, a tecla **[R]** não rotaciona navios.
+
 ## Configuração
 
 | Variável | Onde | Função |

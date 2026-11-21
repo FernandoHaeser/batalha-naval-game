@@ -10,7 +10,7 @@
 		<li>Posicionamento manual ou aleatório de navios.</li>
 		<li>Modo PvE com IA em níveis de dificuldade configuráveis.</li>
 		<li>Modo PvP local com overlay para troca de jogador.</li>
-		<li>Modo online: crie um lobby, compartilhe o código de 4 caracteres e jogue em outro dispositivo.</li>
+		<li>Modo online: crie um lobby, compartilhe o código de 4 caracteres e jogue em outro dispositivo, com chat entre os jogadores.</li>
 		<li>Regra: ao acertar um navio, o jogador continua jogando até errar.</li>
 		<li>Feedback visual (acertos, erros, afundados) e log de batalha.</li>
 	</ul>
@@ -77,7 +77,7 @@ npm start
 <section>
 	<h2>Estrutura do projeto</h2>
 	<ul>
-		<li><code>server.js</code>: servidor Express + Socket.IO (serve o front e controla lobbies, turnos e ataques do modo online).</li>
+		<li><code>server.js</code>: servidor Express + Socket.IO (serve o front e controla lobbies, turnos, ataques e chat do modo online).</li>
 		<li><code>public/index.html</code>: interface do jogo.</li>
 		<li><code>public/style.css</code>: folhas de estilo e tema visual.</li>
 		<li><code>public/game.js</code>: lógica do jogo no navegador (posicionamento, ataques, IA, fluxo de telas, cliente online).</li>
