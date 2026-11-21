@@ -19,6 +19,8 @@ app.get("/health", (req, res) => res.json({ ok: true, rooms: rooms.size }));
 const rooms = new Map();
 
 const BOARD_SIZE = 10;
+const CHAT_MAX_LENGTH = 200;
+const CHAT_COOLDOWN_MS = 400;
 
 function makeLobbyCode() {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -206,6 +208,24 @@ io.on("connection", (socket) => {
         } else if (result === "miss") {
             io.to(lobbyCode).emit("turn-changed", { turn: room.turn });
         }
+    });
+
+    socket.on("chat-message", (payload) => {
+        const lobbyCode = socket.data.roomCode;
+        const room = lobbyCode ? rooms.get(lobbyCode) : null;
+        if (!room) return;
+        const playerNumber = room.players[socket.id];
+        if (!playerNumber) return;
+        if (!payload || typeof payload.text !== "string") return;
+
+        const text = payload.text.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, CHAT_MAX_LENGTH);
+        if (!text) return;
+
+        const now = Date.now();
+        if (socket.data.lastChatAt && now - socket.data.lastChatAt < CHAT_COOLDOWN_MS) return;
+        socket.data.lastChatAt = now;
+
+        io.to(lobbyCode).emit("chat-message", { playerNumber, text, at: now });
     });
 
     socket.on("leave-lobby", () => {
