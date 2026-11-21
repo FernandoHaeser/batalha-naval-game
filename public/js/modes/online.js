@@ -1,6 +1,7 @@
 'use strict';
 
 const RADIO_SCREENS = ['placement', 'game', 'victory'];
+const GAME_START_DELAY_MS = 1100;
 let radioOpen = true;
 let radioMuted = false;
 
@@ -73,6 +74,7 @@ function joinLobby(event) {
 function showLobbyWaiting(code) {
     const host = state.online.isHost;
     state.online.lobbyCode = code;
+    state.online.ready = { 1: false, 2: false };
     byId('lobby-menu').hidden = true;
     byId('lobby-waiting').hidden = false;
     const chars = byId('lobby-code-display');
@@ -129,11 +131,47 @@ function leaveRoom() {
 function onlineReady() {
     const me = state.online.playerNumber;
     state.online.readySent = true;
+    state.online.ready[me] = true;
     byId('placement-subtitle').textContent = 'Frota pronta. Aguardando o adversário...';
     renderPlacementScreen(me);
     clearPlacementPreview();
     const socket = getOnlineSocket();
     if (socket) socket.emit('player-ready', { board: state.boards[me], ships: state.ships[me] });
+}
+
+function renderReadyPanel() {
+    const me = state.online.playerNumber || 1;
+    const foe = otherPlayer(me);
+    const ready = state.online.ready;
+    const count = Number(Boolean(ready[1])) + Number(Boolean(ready[2]));
+    const allReady = count === 2;
+
+    const panel = byId('ready-panel');
+    panel.hidden = false;
+    panel.classList.toggle('all-ready', allReady);
+    byId('ready-count').textContent = `${count}/2`;
+    byId('ready-bar').querySelectorAll('i').forEach((bar, k) => bar.classList.toggle('on', k < count));
+
+    const slots = [
+        { n: me, name: 'VOCÊ', on: ready[me] },
+        { n: foe, name: 'ADVERSÁRIO', on: ready[foe] },
+    ];
+    byId('ready-slots').replaceChildren(...slots.map(slot => {
+        const row = el('div', `ready-slot ${slot.on ? 'on' : ''}`);
+        const status = el('span', 'ready-state');
+        if (slot.on) status.textContent = '✓ PRONTO';
+        else status.replaceChildren('posicionando', dotsEl());
+        row.append(el('span', `avatar avatar-sm avatar-${playerColor(slot.n)}`, `P${slot.n}`), el('span', 'ready-name', slot.name), status);
+        return row;
+    }));
+
+    const wait = byId('placement-wait');
+    wait.hidden = !state.online.readySent;
+    wait.classList.toggle('all-ready', allReady);
+    byId('placement-wait-title').textContent = allReady ? 'BATALHA INICIANDO' : 'AGUARDANDO ADVERSÁRIO';
+    const sub = byId('placement-wait-sub');
+    if (allReady) sub.textContent = 'Todos prontos. Aos canhões!';
+    else sub.replaceChildren('O adversário ainda posiciona a frota', dotsEl());
 }
 
 function isRadioAvailable() {
@@ -322,6 +360,9 @@ function setupOnlineListeners(socket) {
     });
 
     socket.on('player-ready', ({ playerNumber }) => {
+        if (playerNumber !== 1 && playerNumber !== 2) return;
+        state.online.ready[playerNumber] = true;
+        if (state.phase === 'placement') renderReadyPanel();
         if (playerNumber === state.online.playerNumber) return;
         radioSystem('O adversário está com a frota pronta.');
         if (!state.online.readySent) {
@@ -330,14 +371,20 @@ function setupOnlineListeners(socket) {
     });
 
     socket.on('game-start', ({ turn }) => {
+        const code = state.online.lobbyCode;
+        state.online.ready = { 1: true, 2: true };
+        if (state.phase === 'placement') renderReadyPanel();
         state.phase = 'game';
         state.gameId = Date.now();
         state.currentTurn = turn;
         state.stats.start = Date.now();
         state.banner = { last: null, streak: 0 };
-        state.online.readySent = false;
-        enterBattleScreen();
         radioSystem(turn === state.online.playerNumber ? 'Partida iniciada. Você começa.' : 'Partida iniciada. O adversário começa.');
+        setTimeout(() => {
+            if (state.mode !== 'online' || state.online.lobbyCode !== code) return;
+            state.online.readySent = false;
+            if (state.phase === 'game') enterBattleScreen();
+        }, GAME_START_DELAY_MS);
     });
 
     socket.on('attack-result', applyAttackResult);
@@ -383,6 +430,8 @@ defineMode('online', {
     color: n => (n === getViewer() ? 'cyan' : 'orange'),
 
     placementLocked: () => state.online.readySent,
+
+    placementStatus: renderReadyPanel,
 
     confirmPlacementExit: true,
 

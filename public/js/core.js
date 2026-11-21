@@ -70,7 +70,7 @@ function resetState() {
         pvpViewer: 1,
         pvpEvents: [],
         ai: { mode: 'hunt', targetQueue: [], hitDir: null, firstHit: null, attacked: new Set() },
-        online: { socket: state.online.socket, playerNumber: null, lobbyCode: null, shipsLeft: null, readySent: false, isHost: false },
+        online: { socket: state.online.socket, playerNumber: null, lobbyCode: null, shipsLeft: null, readySent: false, isHost: false, ready: { 1: false, 2: false } },
     };
 }
 

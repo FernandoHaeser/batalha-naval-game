@@ -214,6 +214,14 @@
                     <h1 id="placement-title" class="placement-title">POSICIONE<br>SUA FROTA</h1>
                     <p id="placement-subtitle" class="body-muted"></p>
                 </div>
+                <div id="ready-panel" class="ready-panel" role="status" aria-live="polite" hidden>
+                    <div class="ready-head">
+                        <span class="label-muted">PRONTOS PARA A BATALHA</span>
+                        <span id="ready-count" class="ready-count">0/2</span>
+                    </div>
+                    <div id="ready-bar" class="ready-bar" aria-hidden="true"><i></i><i></i></div>
+                    <div id="ready-slots" class="ready-slots"></div>
+                </div>
                 <div id="ship-list" class="dock"></div>
                 <div class="tools">
                     <button type="button" class="tool" onclick="rotateShip()">
@@ -232,9 +240,18 @@
             <div class="placement-board-wrap">
                 <div class="board-frame">
                     <div class="col-labels" id="placement-col-labels"></div>
-                    <div class="board-row">
+                    <div class="board-row board-row-placement">
                         <div class="row-labels" id="placement-row-labels"></div>
                         <div id="placement-board" class="board board-placement"></div>
+                        <div id="placement-wait" class="placement-wait" hidden>
+                            <div class="radar radar-sm" aria-hidden="true">
+                                <span class="ring"></span><span class="ring"></span><span class="ring"></span>
+                                <svg width="36" height="36" viewBox="0 0 11 11"><path d="M4 0h3v1h2v2h1v2h1v1h-1v2H9v2H7v1H4v-1H2V8H1V6H0V5h1V3h1V1h2z" fill="#00ff88"/><path d="M5 2h1v3h3v1H5z" fill="#07111d"/></svg>
+                            </div>
+                            <span class="placement-wait-kicker">FROTA ANCORADA</span>
+                            <span id="placement-wait-title" class="placement-wait-title"></span>
+                            <span id="placement-wait-sub" class="placement-wait-sub"></span>
+                        </div>
                     </div>
                 </div>
                 <p class="hint">Atalho: <kbd>R</kbd> gira o navio · ciano = cabe · vermelho = bloqueado</p>

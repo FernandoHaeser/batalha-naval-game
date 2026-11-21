@@ -37,6 +37,14 @@ function renderPlacementScreen(playerNum) {
     renderShipList(playerNum);
     renderPlacementBoard(playerNum);
     updateReadyButton(playerNum);
+    renderPlacementStatus();
+}
+
+function renderPlacementStatus() {
+    const status = currentMode().placementStatus;
+    if (status) { status(); return; }
+    byId('ready-panel').hidden = true;
+    byId('placement-wait').hidden = true;
 }
 
 function renderShipList(playerNum) {
